@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestão de Anúncios - PubliADS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body data-page="anuncios">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true"><i class="ph ph-rocket-launch"></i></div>
+        <div class="brand__text">
+          <div class="brand__name">PubliADS</div>
+        </div>
+      </div>
+      <nav class="nav" aria-label="Navegação">
+        <a class="nav__link" href="dashboard.html"><i class="ph ph-squares-four"></i><span>Dashboard</span></a>
+        <a class="nav__link is-active" href="anuncios.html"><i class="ph ph-megaphone"></i><span>Campanhas</span></a>
+        <a class="nav__link" href="cadastros.html"><i class="ph ph-users"></i><span>Cadastros</span></a>
+      </nav>
+      <div class="sidebar__bottom">
+        <button class="btn" id="btnReset"><i class="ph ph-arrows-clockwise"></i> Reset</button>
+        <button class="btn btn--danger" id="btnLogout"><i class="ph ph-sign-out"></i> Sair</button>
+      </div>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1 class="title">Gestão de Anúncios</h1>
+          <p class="subtitle">Lançamento e controle de novas campanhas.</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="section">
+          <div class="section__head">
+            <h2 class="section__title"><i class="ph ph-list-dashes"></i> Histórico de Campanhas</h2>
+            <span class="pill" id="adsCount">0 registros</span>
+          </div>
+          <div class="section__body" style="padding: 0;">
+            <div class="table-wrap" style="border: none; border-radius: 0;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Campanha</th>
+                    <th>Cliente</th>
+                    <th>Plataforma</th>
+                    <th>Início</th>
+                    <th>Fim</th>
+                    <th>Orçamento</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="adsBody"></tbody>
+              </table>
+            </div>
+            <div id="adsMsg" class="msg" style="display:none; margin: 1rem;"></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section__head">
+            <h2 class="section__title"><i class="ph ph-plus-circle"></i> Novo Lançamento</h2>
+          </div>
+          <div class="section__body">
+            <form class="form" id="adForm" autocomplete="off">
+              <div class="field">
+                <label class="label" for="adTitle">Nome da Campanha</label>
+                <input class="input" id="adTitle" name="title" required placeholder="Ex: Black Friday" />
+              </div>
+              <div class="field">
+                <label class="label" for="adDesc">Estratégia / Descrição</label>
+                <textarea class="textarea" id="adDesc" name="description" required placeholder="Detalhes do objetivo..."></textarea>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="field">
+                  <label class="label" for="adStart">Data de Início</label>
+                  <input class="input" id="adStart" name="startDate" type="date" required />
+                </div>
+                <div class="field">
+                  <label class="label" for="adEnd">Data de Fim</label>
+                  <input class="input" id="adEnd" name="endDate" type="date" required />
+                </div>
+              </div>
+              <div class="field">
+                <label class="label" for="adCost">Orçamento (R$)</label>
+                <input class="input" id="adCost" name="cost" type="number" step="0.01" min="0" required placeholder="0.00" />
+              </div>
+              <div class="field">
+                <label class="label" for="adClient">Vincular Cliente</label>
+                <select class="select" id="adClient" name="clientId" required></select>
+              </div>
+              <div class="field">
+                <label class="label" for="adPlatform">Onde será veiculado?</label>
+                <select class="select" id="adPlatform" name="platformId" required></select>
+              </div>
+              <div class="form__actions" style="margin-top: 1rem;">
+                <button class="btn btn--primary" type="submit"><i class="ph ph-paper-plane-tilt"></i> Publicar</button>
+                <button class="btn" type="reset"><i class="ph ph-eraser"></i> Limpar</button>
+              </div>
+              <div id="adFormMsg" class="msg" style="display:none"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

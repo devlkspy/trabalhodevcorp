@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - AdControl Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body data-page="dashboard">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true"><i class="ph ph-rocket-launch"></i></div>
+        <div class="brand__text">
+          <div class="brand__name">PubliADS</div>
+        </div>
+      </div>
+      <nav class="nav" aria-label="Navegação">
+        <a class="nav__link is-active" href="dashboard.html"><i class="ph ph-squares-four"></i><span>Dashboard</span></a>
+        <a class="nav__link" href="anuncios.html"><i class="ph ph-megaphone"></i><span>Campanhas</span></a>
+        <a class="nav__link" href="cadastros.html"><i class="ph ph-users"></i><span>Cadastros</span></a>
+      </nav>
+      <div class="sidebar__bottom">
+        <button class="btn" id="btnReset"><i class="ph ph-arrows-clockwise"></i> Reset</button>
+        <button class="btn btn--danger" id="btnLogout"><i class="ph ph-sign-out"></i> Sair</button>
+      </div>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1 class="title">Dashboard</h1>
+          <p class="subtitle">View insights and analytics for all paid traffic channels.</p>
+        </div>
+      </div>
+      <div class="grid cards">
+        <div class="card">
+          <div class="card__icon"><i class="ph ph-currency-dollar"></i></div>
+          <div class="card__label">Total Spend</div>
+          <div class="card__value" id="kpiSpent">R$ 0,00</div>
+          <div class="card__meta" id="kpiCpr">Custo por resultado: R$ 0,00</div>
+        </div>
+        <div class="card">
+          <div class="card__icon"><i class="ph ph-users-three"></i></div>
+          <div class="card__label">Alcance</div>
+          <div class="card__value" id="kpiReach">0</div>
+          <div class="card__meta">Visualizações totais</div>
+        </div>
+        <div class="card">
+          <div class="card__icon"><i class="ph ph-activity"></i></div>
+          <div class="card__label">Ativas</div>
+          <div class="card__value" id="kpiActive">0</div>
+          <div class="card__meta">Campanhas rodando</div>
+        </div>
+        <div class="card">
+          <div class="card__icon"><i class="ph ph-target"></i></div>
+          <div class="card__label">Conversions</div>
+          <div class="card__value" id="kpiResults">0</div>
+          <div class="card__meta">Resultados gerados</div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section__head">
+          <h2 class="section__title"><i class="ph ph-chart-line-up"></i> Campanhas Recentes</h2>
+          <span class="pill" id="adsCount">0 anúncios</span>
+        </div>
+        <div class="section__body" style="padding: 0;">
+          <div class="table-wrap" style="border: none; border-radius: 0;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Campanha</th>
+                  <th>Cliente</th>
+                  <th>Plataforma</th>
+                  <th>Período</th>
+                  <th>Status</th>
+                  <th>Investimento</th>
+                  <th>Alcance</th>
+                  <th>Resultados</th>
+                </tr>
+              </thead>
+              <tbody id="dashboardAdsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

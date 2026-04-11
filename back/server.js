@@ -15,7 +15,7 @@ app.use(express.json());
 const db = mysql.createConnection({
   host: 'mysql-3a673102-lucasmenezes08-cd1d.l.aivencloud.com',
   user: 'avnadmin',
-  password: 'AVNS_G8-nByggXykaPj18Yw0',
+  password: process.env.DB_PASSWORD,
   database: 'defaultdb',
   port: 15971,
   ssl: {

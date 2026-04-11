@@ -3,7 +3,7 @@ const $ = (sel, root = document) => root.querySelector(sel);
 
 // --- IMPORTANTE: QUANDO SUBIR PRO RAILWAY, COLOQUE O LINK DELE AQUI ---
 // Exemplo: const API_URL = "https://seu-projeto.up.railway.app";
-const API_URL = "http://127.0.0.1:3000"; 
+const API_URL = "https://trabalhodevcorp.onrender.com"; 
 
 const isLoggedIn = () => {
     return !!localStorage.getItem(sessionKey);

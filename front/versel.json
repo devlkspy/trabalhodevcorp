@@ -1,3 +1,7 @@
 {
-  "cleanUrls": true
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/cadastro", "destination": "/cadastro.html" }
+  ]
 }

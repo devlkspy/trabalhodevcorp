@@ -1,8 +1,6 @@
 const sessionKey = "controle_publicidade_session_v1";
 const $ = (sel, root = document) => root.querySelector(sel);
 
-// --- IMPORTANTE: QUANDO SUBIR PRO RAILWAY, COLOQUE O LINK DELE AQUI ---
-// Exemplo: const API_URL = "https://seu-projeto.up.railway.app";
 const API_URL = "https://trabalhodevcorp.onrender.com"; 
 
 const isLoggedIn = () => {
@@ -19,11 +17,11 @@ const clearSession = () => {
 
 const guard = (page) => {
     if ((page === "login" || page === "cadastro") && isLoggedIn()) {
-        window.location.href = "dashboard.html";
+        window.location.href = "dashboard";
         return false;
     }
     if (page !== "login" && page !== "cadastro" && !isLoggedIn()) {
-        window.location.href = "login.html";
+        window.location.href = "login";
         return false;
     }
     return true;
@@ -50,7 +48,7 @@ const initLogin = () => {
 
             if (dados.success) {
                 setSession(user);
-                window.location.href = "dashboard.html";
+                window.location.href = "dashboard";
             } else {
                 msg.className = "msg is-danger";
                 msg.innerHTML = dados.message;
@@ -86,7 +84,7 @@ const initCadastro = () => {
 
             if (dados.success) {
                 alert("Usuário criado com sucesso!");
-                window.location.href = "login.html";
+                window.location.href = "login";
             } else {
                 msg.className = "msg is-danger";
                 msg.innerHTML = "Erro ao cadastrar.";
@@ -106,7 +104,7 @@ const initLogout = () => {
         btn.addEventListener("click", (e) => {
             e.preventDefault();
             clearSession();
-            window.location.href = "login.html";
+            window.location.href = "login";
         });
     }
 };

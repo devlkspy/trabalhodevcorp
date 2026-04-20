@@ -45,15 +45,25 @@ app.post('/api/login', (req, res) => {
 
 app.post('/api/register', (req, res) => {
   const { nome, login, senha } = req.body;
-  const query = 'INSERT INTO tbUsuarios (nome, login, senha) VALUES (?, ?, ?)';
+  const checkQuery = 'SELECT * FROM tbUsuarios WHERE login = ?';
 
-  db.query(query, [nome, login, senha], (err, result) => {
+  db.query(checkQuery, [login], (err, results) => {
     if (err) return res.status(500).send(err);
-    res.send({ success: true, message: 'Usuário cadastrado com sucesso!' });
+
+    if (results.length > 0) {
+      return res.send({ success: false, message: 'Este usuário já está em uso.' });
+    }
+
+    const insertQuery = 'INSERT INTO tbUsuarios (nome, login, senha) VALUES (?, ?, ?)';
+    
+    db.query(insertQuery, [nome, login, senha], (err, result) => {
+      if (err) return res.status(500).send(err);
+      res.send({ success: true, message: 'Usuário cadastrado com sucesso!' });
+    });
   });
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Servidor rodando na porta ${PORT}`);
 });

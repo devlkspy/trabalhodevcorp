@@ -14,7 +14,7 @@
   <div class="shell">
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand__mark" aria-hidden="true"><i class="ph ph-rocket-launch"></i></div>
+        <div class="brand__mark" aria-hidden="true"><i class="ph ph-moon-stars"></i></div>
         <div class="brand__text">
           <div class="brand__name">PubliADS</div>
         </div>
@@ -29,97 +29,8 @@
         <button class="btn btn--danger" id="btnLogout"><i class="ph ph-sign-out"></i> Sair</button>
       </div>
     </aside>
-    <main class="main">
-      <div class="topbar">
-        <div>
-          <h1 class="title">Cadastros Base</h1>
-          <p class="subtitle">Gerencie sua carteira de clientes e plataformas parceiras.</p>
-        </div>
-      </div>
-      <div class="row">
-        <div class="section">
-          <div class="section__head">
-            <h2 class="section__title"><i class="ph ph-user-circle-plus"></i> Base de Clientes</h2>
-            <span class="pill" id="clientsCount">0 cadastrados</span>
-          </div>
-          <div class="section__body">
-            <form class="form" id="clientForm" autocomplete="off">
-              <div class="field">
-                <label class="label" for="cName">Razão Social / Nome</label>
-                <input class="input" id="cName" name="name" required placeholder="Nome do cliente" />
-              </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="field">
-                  <label class="label" for="cCpf">CPF</label>
-                  <input class="input" id="cCpf" name="cpf" required placeholder="000.000.000-00" maxlength="14" />
-                </div>
-                <div class="field">
-                  <label class="label" for="cBirth">Nascimento</label>
-                  <input class="input" id="cBirth" name="birth" type="date" required />
-                </div>
-              </div>
-              <div class="field">
-                <label class="label" for="cPhone">Contato</label>
-                <input class="input" id="cPhone" name="phone" required placeholder="(00) 00000-0000" maxlength="15" />
-              </div>
-              <div class="form__actions">
-                <button class="btn btn--primary" type="submit"><i class="ph ph-floppy-disk"></i> Salvar Cliente</button>
-              </div>
-              <div id="clientMsg" class="msg" style="display:none"></div>
-            </form>
-            <hr style="border-color: rgba(255,255,255,0.05); margin: 2rem 0;">
-            <div class="table-wrap">
-              <table style="min-width:620px">
-                <thead>
-                  <tr>
-                    <th>Cliente</th>
-                    <th>Documento</th>
-                    <th>Data</th>
-                    <th>Contato</th>
-                    <th>Ação</th>
-                  </tr>
-                </thead>
-                <tbody id="clientsBody"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-        <div class="section">
-          <div class="section__head">
-            <h2 class="section__title"><i class="ph ph-share-network"></i> Plataformas de Mídia</h2>
-            <span class="pill" id="platformsCount">0 cadastradas</span>
-          </div>
-          <div class="section__body">
-            <form class="form" id="platformForm" autocomplete="off">
-              <div class="field">
-                <label class="label" for="pName">Veículo / Rede Social</label>
-                <input class="input" id="pName" name="name" required placeholder="Ex: Google Ads" />
-              </div>
-              <div class="field">
-                <label class="label" for="pDesc">Observações e Formatos</label>
-                <textarea class="textarea" id="pDesc" name="description" required placeholder="Ex: Aceita apenas vídeos curtos..."></textarea>
-              </div>
-              <div class="form__actions">
-                <button class="btn btn--primary" type="submit"><i class="ph ph-floppy-disk"></i> Salvar Plataforma</button>
-              </div>
-              <div id="platformMsg" class="msg" style="display:none"></div>
-            </form>
-            <hr style="border-color: rgba(255,255,255,0.05); margin: 2rem 0;">
-            <div class="table-wrap">
-              <table style="min-width:620px">
-                <thead>
-                  <tr>
-                    <th>Plataforma</th>
-                    <th>Detalhes</th>
-                    <th>Ação</th>
-                  </tr>
-                </thead>
-                <tbody id="platformsBody"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
+    <main class="main" style="display: flex; justify-content: center; align-items: center; height: 100vh; padding: 0;">
+      <img src="construcao.png" alt="Em construção" style="max-width: 80%; max-height: 80vh; object-fit: contain;">
     </main>
   </div>
   <script src="app.js"></script>

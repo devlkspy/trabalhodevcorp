@@ -17,11 +17,11 @@ const clearSession = () => {
 
 const guard = (page) => {
     if ((page === "login" || page === "cadastro") && isLoggedIn()) {
-        window.location.href = "dashboard";
+        window.location.href = "dashboard.html";
         return false;
     }
     if (page !== "login" && page !== "cadastro" && !isLoggedIn()) {
-        window.location.href = "login";
+        window.location.href = "login.html";
         return false;
     }
     return true;
@@ -48,7 +48,7 @@ const initLogin = () => {
 
             if (dados.success) {
                 setSession(user);
-                window.location.href = "dashboard";
+                window.location.href = "dashboard.html";
             } else {
                 msg.className = "msg is-danger";
                 msg.innerHTML = dados.message;
@@ -71,7 +71,15 @@ const initCadastro = () => {
         const nome = form.nome.value.trim();
         const user = form.user.value.trim();
         const pass = form.pass.value.trim();
+        const confirmPass = form.confirmPass.value.trim();
         const msg = $("#registerMsg");
+
+        if (pass !== confirmPass) {
+            msg.className = "msg is-danger";
+            msg.innerHTML = "As senhas não coincidem.";
+            msg.style.display = "flex";
+            return;
+        }
 
         try {
             const resposta = await fetch(`${API_URL}/api/register`, {
@@ -84,7 +92,7 @@ const initCadastro = () => {
 
             if (dados.success) {
                 alert("Usuário criado com sucesso!");
-                window.location.href = "login";
+                window.location.href = "login.html";
             } else {
                 msg.className = "msg is-danger";
                 msg.innerHTML = "Erro ao cadastrar.";
@@ -104,7 +112,7 @@ const initLogout = () => {
         btn.addEventListener("click", (e) => {
             e.preventDefault();
             clearSession();
-            window.location.href = "login";
+            window.location.href = "login.html";
         });
     }
 };

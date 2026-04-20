@@ -11,6 +11,9 @@
     <div class="login">
         <div class="login__card">
             <header class="login__head">
+                <div class="login__mark">
+                    <i class="ph ph-user-plus"></i>
+                </div>
                 <h1 class="login__title">Crie sua conta</h1>
                 <p class="login__sub" style="margin-top: 8px;">Preencha os dados abaixo para começar a anunciar</p>
             </header>
@@ -18,17 +21,22 @@
             <form id="registerForm" class="form">
                 <div class="field">
                     <label class="label">Nome Completo</label>
-                    <input type="text" name="nome" class="input" placeholder="Nome completo" required>
+                    <input type="text" name="nome" class="input" placeholder="Nome completo" minlength="3" maxlength="80" required>
                 </div>
 
                 <div class="field">
                     <label class="label">Usuário ou E-mail</label>
-                    <input type="text" name="user" class="input" placeholder="ex: lucas@email.com" required>
+                    <input type="text" name="user" class="input" placeholder="ex: lucas@email.com" minlength="4" maxlength="50" required>
                 </div>
 
                 <div class="field">
                     <label class="label">Senha</label>
-                    <input type="password" name="pass" class="input" placeholder="Crie uma senha" required>
+                    <input type="password" name="pass" class="input" placeholder="Crie uma senha" minlength="6" maxlength="20" required>
+                </div>
+
+                <div class="field">
+                    <label class="label">Confirmar Senha</label>
+                    <input type="password" name="confirmPass" class="input" placeholder="Repita a senha" minlength="6" maxlength="20" required>
                 </div>
 
                 <div id="registerMsg" class="msg" style="display: none;"></div>

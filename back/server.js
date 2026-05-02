@@ -63,6 +63,14 @@ app.post('/api/register', (req, res) => {
   });
 });
 
+app.get('/api/usuarios', (req, res) => {
+  const query = 'SELECT nome, login FROM tbUsuarios';
+  db.query(query, (err, results) => {
+    if (err) return res.status(500).send(err);
+    res.send(results);
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor rodando na porta ${PORT}`);

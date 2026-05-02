@@ -106,6 +106,36 @@ const initCadastro = () => {
     });
 };
 
+const initCadastros = async () => {
+    const tbody = $("#usuariosBody");
+    if (!tbody) return;
+    try {
+        const resposta = await fetch(`${API_URL}/api/usuarios`);
+        const texto = await resposta.text();
+        let dados;
+        try {
+            dados = JSON.parse(texto);
+        } catch (_) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">O servidor está reiniciando. Aguarde cerca de 2 minutos e aperte F5.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = "";
+        dados.forEach((user, index) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><input type="checkbox"></td>
+                <td>${index + 1}</td>
+                <td>${user.nome}</td>
+                <td>${user.login}</td>
+                <td>Usuário</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (erro) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">O servidor está reiniciando. Aguarde cerca de 2 minutos e aperte F5.</td></tr>`;
+    }
+};
+
 const initLogout = () => {
     const btn = $("#btnLogout");
     if (btn) {
@@ -122,5 +152,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!guard(page)) return;
     if (page === "login") initLogin();
     if (page === "cadastro") initCadastro();
+    if (page === "cadastros") initCadastros();
     initLogout();
 });

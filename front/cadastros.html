@@ -22,14 +22,43 @@
       <nav class="nav" aria-label="Navegação">
         <a class="nav__link" href="dashboard.html"><i class="ph ph-squares-four"></i><span>Dashboard</span></a>
         <a class="nav__link" href="anuncios.html"><i class="ph ph-megaphone"></i><span>Campanhas</span></a>
-        <a class="nav__link is-active" href="cadastros.html"><i class="ph ph-users"></i><span>Cadastros</span></a>
+        <a class="nav__link is-active" href="cadastros.html"><i class="ph ph-users"></i><span>Listar Usuários</span></a>
       </nav>
       <div class="sidebar__bottom">
         <button class="btn btn--danger" id="btnLogout"><i class="ph ph-sign-out"></i> Sair</button>
       </div>
     </aside>
-    <main class="main" style="display: flex; justify-content: center; align-items: center; height: 100vh; padding: 0;">
-      <img src="construcao.png" alt="Em construção" style="max-width: 80%; max-height: 80vh; object-fit: contain;">
+    <main class="main">
+      <div class="topbar">
+        <h1>Usuários - Listar</h1>
+      </div>
+      <div class="section">
+        <div class="section__head">
+          <div style="display: flex; gap: 8px;">
+            <button class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Incluir</button>
+            <button class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Editar</button>
+            <button class="btn" style="background:#D32F2F;border-color:#D32F2F;color:#fff;font-weight:600;">Excluir</button>
+            <button class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Imprimir</button>
+          </div>
+        </div>
+        <div class="section__body">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>ID</th>
+                  <th>Nome</th>
+                  <th>E-mail</th>
+                  <th>Perfil</th>
+                </tr>
+              </thead>
+              <tbody id="usuariosBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
   <script src="app.js"></script>

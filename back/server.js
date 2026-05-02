@@ -6,7 +6,7 @@ const app = express();
 
 app.use(cors({
   origin: '*',
-  methods: ['GET', 'POST', 'DELETE'],
+  methods: ['GET', 'POST', 'DELETE', 'PUT'],
   allowedHeaders: ['Content-Type']
 }));
 
@@ -79,6 +79,26 @@ app.delete('/api/usuarios/:login', (req, res) => {
     if (result.affectedRows === 0) return res.send({ success: false, message: 'Usuário não encontrado.' });
     res.send({ success: true, message: 'Usuário excluído com sucesso.' });
   });
+});
+
+app.put('/api/usuarios/:login', (req, res) => {
+  const { login } = req.params;
+  const { nome, senha } = req.body;
+  if (senha && senha.trim() !== '') {
+    const query = 'UPDATE tbUsuarios SET nome = ?, senha = ? WHERE login = ?';
+    db.query(query, [nome, senha, login], (err, result) => {
+      if (err) return res.status(500).send(err);
+      if (result.affectedRows === 0) return res.send({ success: false, message: 'Usuário não encontrado.' });
+      res.send({ success: true, message: 'Usuário atualizado com sucesso.' });
+    });
+  } else {
+    const query = 'UPDATE tbUsuarios SET nome = ? WHERE login = ?';
+    db.query(query, [nome, login], (err, result) => {
+      if (err) return res.status(500).send(err);
+      if (result.affectedRows === 0) return res.send({ success: false, message: 'Usuário não encontrado.' });
+      res.send({ success: true, message: 'Usuário atualizado com sucesso.' });
+    });
+  }
 });
 
 const PORT = process.env.PORT || 3000;

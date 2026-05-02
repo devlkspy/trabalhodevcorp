@@ -6,7 +6,7 @@ const app = express();
 
 app.use(cors({
   origin: '*',
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'DELETE'],
   allowedHeaders: ['Content-Type']
 }));
 
@@ -68,6 +68,16 @@ app.get('/api/usuarios', (req, res) => {
   db.query(query, (err, results) => {
     if (err) return res.status(500).send(err);
     res.send(results);
+  });
+});
+
+app.delete('/api/usuarios/:login', (req, res) => {
+  const { login } = req.params;
+  const query = 'DELETE FROM tbUsuarios WHERE login = ?';
+  db.query(query, [login], (err, result) => {
+    if (err) return res.status(500).send(err);
+    if (result.affectedRows === 0) return res.send({ success: false, message: 'Usuário não encontrado.' });
+    res.send({ success: true, message: 'Usuário excluído com sucesso.' });
   });
 });
 

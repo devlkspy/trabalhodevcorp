@@ -74,6 +74,21 @@ const initCadastro = () => {
         const confirmPass = form.confirmPass.value.trim();
         const msg = $("#registerMsg");
 
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(user)) {
+            msg.className = "msg is-danger";
+            msg.innerHTML = "Digite um e-mail válido no campo de login.";
+            msg.style.display = "flex";
+            return;
+        }
+
+        if (pass.length < 6) {
+            msg.className = "msg is-danger";
+            msg.innerHTML = "A senha deve ter no mínimo 6 caracteres.";
+            msg.style.display = "flex";
+            return;
+        }
+
         if (pass !== confirmPass) {
             msg.className = "msg is-danger";
             msg.innerHTML = "As senhas não coincidem.";
@@ -95,7 +110,7 @@ const initCadastro = () => {
                 window.location.href = "login.html";
             } else {
                 msg.className = "msg is-danger";
-                msg.innerHTML = "Erro ao cadastrar.";
+                msg.innerHTML = dados.message || "Erro ao cadastrar.";
                 msg.style.display = "flex";
             }
         } catch (erro) {
@@ -109,30 +124,95 @@ const initCadastro = () => {
 const initCadastros = async () => {
     const tbody = $("#usuariosBody");
     if (!tbody) return;
-    try {
-        const resposta = await fetch(`${API_URL}/api/usuarios`);
-        const texto = await resposta.text();
-        let dados;
+
+    const carregarUsuarios = async () => {
         try {
-            dados = JSON.parse(texto);
-        } catch (_) {
+            const resposta = await fetch(`${API_URL}/api/usuarios`);
+            const texto = await resposta.text();
+            let dados;
+            try {
+                dados = JSON.parse(texto);
+            } catch (_) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">O servidor está reiniciando. Aguarde cerca de 2 minutos e aperte F5.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = "";
+            dados.forEach((user, index) => {
+                const tr = document.createElement("tr");
+                tr.dataset.login = user.login;
+                tr.innerHTML = `
+                    <td><input type="checkbox" data-login="${user.login}"></td>
+                    <td>${index + 1}</td>
+                    <td>${user.nome}</td>
+                    <td>${user.login}</td>
+                    <td>Usuário</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (erro) {
             tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">O servidor está reiniciando. Aguarde cerca de 2 minutos e aperte F5.</td></tr>`;
-            return;
         }
-        tbody.innerHTML = "";
-        dados.forEach((user, index) => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td><input type="checkbox"></td>
-                <td>${index + 1}</td>
-                <td>${user.nome}</td>
-                <td>${user.login}</td>
-                <td>Usuário</td>
-            `;
-            tbody.appendChild(tr);
+    };
+
+    await carregarUsuarios();
+
+    const btnIncluir = $("#btnIncluir");
+    const btnEditar = $("#btnEditar");
+    const btnExcluir = $("#btnExcluir");
+    const btnImprimir = $("#btnImprimir");
+
+    if (btnIncluir) {
+        btnIncluir.addEventListener('click', () => {
+            window.location.href = "cadastro.html";
         });
-    } catch (erro) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">O servidor está reiniciando. Aguarde cerca de 2 minutos e aperte F5.</td></tr>`;
+    }
+
+    if (btnImprimir) {
+        btnImprimir.addEventListener('click', () => {
+            window.print();
+        });
+    }
+
+    if (btnEditar) {
+        btnEditar.addEventListener('click', () => {
+            const selecionados = document.querySelectorAll('#usuariosBody input[type="checkbox"]:checked');
+            if (selecionados.length === 0) {
+                alert("Por favor, selecione um usuário na lista.");
+                return;
+            }
+            alert("Função em desenvolvimento.");
+        });
+    }
+
+    if (btnExcluir) {
+        btnExcluir.addEventListener('click', async () => {
+            const selecionados = document.querySelectorAll('#usuariosBody input[type="checkbox"]:checked');
+            if (selecionados.length === 0) {
+                alert("Por favor, selecione um usuário na lista.");
+                return;
+            }
+            const nomes = Array.from(selecionados).map(cb => cb.dataset.login).join(', ');
+            const confirmado = confirm(`Excluir os usuários: ${nomes}?`);
+            if (!confirmado) return;
+            const erros = [];
+            for (const cb of selecionados) {
+                try {
+                    const res = await fetch(`${API_URL}/api/usuarios/${encodeURIComponent(cb.dataset.login)}`, {
+                        method: 'DELETE'
+                    });
+                    const dados = await res.json();
+                    if (!dados.success) erros.push(cb.dataset.login);
+                } catch (_) {
+                    erros.push(cb.dataset.login);
+                }
+            }
+            if (erros.length > 0) {
+                alert(`Falha ao excluir: ${erros.join(', ')}`);
+            } else {
+                alert("Usuário(s) excluído(s) com sucesso.");
+            }
+            await carregarUsuarios();
+        });
     }
 };
 

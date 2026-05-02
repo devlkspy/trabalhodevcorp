@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cadastros Base - PubliADS</title>
+  <title>Listar Usuários - PubliADS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -145,31 +145,54 @@
         </div>
       </div>
     </main>
+  </div>
 
-    <div id="modalEditar" class="modal-overlay">
-      <div class="modal-box">
-        <h2>Editar Usuário</h2>
-        <div class="field">
-          <label class="label">Nome</label>
-          <input id="editNome" type="text" class="input" placeholder="Nome completo">
-        </div>
-        <div class="field">
-          <label class="label">E-mail (login)</label>
-          <input id="editLogin" type="text" class="input" placeholder="E-mail" readonly style="opacity:0.6;cursor:not-allowed;">
-        </div>
-        <div class="field">
-          <label class="label">Nova Senha <span style="color:var(--muted2);font-size:0.8rem;">(deixe em branco para não alterar)</span></label>
-          <input id="editSenha" type="password" class="input" placeholder="Nova senha">
-        </div>
-        <div id="editMsg" class="msg" style="display:none;"></div>
-        <div class="modal-actions">
-          <button id="btnModalCancelar" class="btn">Cancelar</button>
-          <button id="btnModalSalvar" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Salvar</button>
-        </div>
+  <div id="modalIncluir" class="modal-overlay">
+    <div class="modal-box">
+      <h2>Incluir Usu&aacute;rio</h2>
+      <div class="field">
+        <label class="label">Nome</label>
+        <input id="inclNome" type="text" class="input" placeholder="Nome completo">
+      </div>
+      <div class="field">
+        <label class="label">E-mail (login)</label>
+        <input id="inclLogin" type="text" class="input" placeholder="ex: lucas@email.com">
+      </div>
+      <div class="field">
+        <label class="label">Senha</label>
+        <input id="inclSenha" type="password" class="input" placeholder="M&iacute;nimo 6 caracteres">
+      </div>
+      <div id="inclMsg" class="msg" style="display:none;"></div>
+      <div class="modal-actions">
+        <button id="btnInclCancelar" class="btn">Cancelar</button>
+        <button id="btnInclSalvar" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Criar Usu&aacute;rio</button>
       </div>
     </div>
-
   </div>
+
+  <div id="modalEditar" class="modal-overlay">
+    <div class="modal-box">
+      <h2>Editar Usu&aacute;rio</h2>
+      <div class="field">
+        <label class="label">Nome</label>
+        <input id="editNome" type="text" class="input" placeholder="Nome completo">
+      </div>
+      <div class="field">
+        <label class="label">E-mail (login)</label>
+        <input id="editLogin" type="text" class="input" placeholder="E-mail" readonly style="opacity:0.6;cursor:not-allowed;">
+      </div>
+      <div class="field">
+        <label class="label">Nova Senha <span style="color:var(--muted2);font-size:0.8rem;">(deixe em branco para n&atilde;o alterar)</span></label>
+        <input id="editSenha" type="password" class="input" placeholder="Nova senha">
+      </div>
+      <div id="editMsg" class="msg" style="display:none;"></div>
+      <div class="modal-actions">
+        <button id="btnModalCancelar" class="btn">Cancelar</button>
+        <button id="btnModalSalvar" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Salvar</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

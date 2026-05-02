@@ -160,6 +160,15 @@ const initCadastros = async () => {
     const btnEditar = $("#btnEditar");
     const btnExcluir = $("#btnExcluir");
     const btnImprimir = $("#btnImprimir");
+
+    const modalIncluir = $("#modalIncluir");
+    const inclNome = $("#inclNome");
+    const inclLogin = $("#inclLogin");
+    const inclSenha = $("#inclSenha");
+    const inclMsg = $("#inclMsg");
+    const btnInclCancelar = $("#btnInclCancelar");
+    const btnInclSalvar = $("#btnInclSalvar");
+
     const modal = $("#modalEditar");
     const editNome = $("#editNome");
     const editLogin = $("#editLogin");
@@ -168,11 +177,78 @@ const initCadastros = async () => {
     const btnModalCancelar = $("#btnModalCancelar");
     const btnModalSalvar = $("#btnModalSalvar");
 
+    const fecharModalIncluir = () => {
+        if (modalIncluir) modalIncluir.classList.remove("is-open");
+        if (inclNome) inclNome.value = "";
+        if (inclLogin) inclLogin.value = "";
+        if (inclSenha) inclSenha.value = "";
+        if (inclMsg) inclMsg.style.display = "none";
+    };
+
     const fecharModal = () => {
         if (modal) modal.classList.remove("is-open");
         if (editSenha) editSenha.value = "";
         if (editMsg) editMsg.style.display = "none";
     };
+
+    if (btnInclCancelar) {
+        btnInclCancelar.addEventListener("click", fecharModalIncluir);
+    }
+
+    if (modalIncluir) {
+        modalIncluir.addEventListener("click", (e) => {
+            if (e.target === modalIncluir) fecharModalIncluir();
+        });
+    }
+
+    if (btnInclSalvar) {
+        btnInclSalvar.addEventListener("click", async () => {
+            const nome = inclNome.value.trim();
+            const login = inclLogin.value.trim();
+            const senha = inclSenha.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!nome) {
+                inclMsg.className = "msg is-danger";
+                inclMsg.innerHTML = "O nome n\u00e3o pode ficar em branco.";
+                inclMsg.style.display = "flex";
+                return;
+            }
+            if (!emailRegex.test(login)) {
+                inclMsg.className = "msg is-danger";
+                inclMsg.innerHTML = "Digite um e-mail v\u00e1lido.";
+                inclMsg.style.display = "flex";
+                return;
+            }
+            if (senha.length < 6) {
+                inclMsg.className = "msg is-danger";
+                inclMsg.innerHTML = "A senha deve ter no m\u00ednimo 6 caracteres.";
+                inclMsg.style.display = "flex";
+                return;
+            }
+            try {
+                const res = await fetch(`${API_URL}/api/register`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nome, login, senha })
+                });
+                const dados = await res.json();
+                if (dados.success) {
+                    fecharModalIncluir();
+                    await carregarUsuarios();
+                } else {
+                    inclMsg.className = "msg is-danger";
+                    inclMsg.innerHTML = dados.message || "Erro ao criar usu\u00e1rio.";
+                    inclMsg.style.display = "flex";
+                }
+            } catch (_) {
+                inclMsg.className = "msg is-danger";
+                inclMsg.innerHTML = "Servidor offline.";
+                inclMsg.style.display = "flex";
+            }
+        });
+    }
+
 
     if (btnModalCancelar) {
         btnModalCancelar.addEventListener("click", fecharModal);
@@ -220,7 +296,8 @@ const initCadastros = async () => {
 
     if (btnIncluir) {
         btnIncluir.addEventListener("click", () => {
-            window.location.href = "cadastro.html";
+            fecharModalIncluir();
+            if (modalIncluir) modalIncluir.classList.add("is-open");
         });
     }
 

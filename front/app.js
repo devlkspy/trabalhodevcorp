@@ -361,6 +361,162 @@ const initCadastros = async () => {
     }
 };
 
+const initClientes = async () => {
+    const tbody = $("#clientesBody");
+    if (!tbody) return;
+
+    const carregarClientes = async () => {
+        try {
+            const resposta = await fetch(`${API_URL}/api/clientes`);
+            const texto = await resposta.text();
+            let dados;
+            try {
+                dados = JSON.parse(texto);
+            } catch (_) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">O servidor est\u00e1 reiniciando. Aguarde cerca de 2 minutos e aperte F5.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = "";
+            dados.forEach((cliente) => {
+                const tr = document.createElement("tr");
+                tr.dataset.id = cliente.id;
+                tr.innerHTML = `
+                    <td><input type="checkbox" data-id="${cliente.id}"></td>
+                    <td>${cliente.id}</td>
+                    <td>${cliente.razao_social}</td>
+                    <td>${cliente.cpf_cnpj}</td>
+                    <td>${cliente.contato}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (erro) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">O servidor est\u00e1 reiniciando. Aguarde cerca de 2 minutos e aperte F5.</td></tr>`;
+        }
+    };
+
+    await carregarClientes();
+
+    const btnIncluirCliente = $("#btnIncluirCliente");
+    const btnExcluirCliente = $("#btnExcluirCliente");
+    const btnImprimirCliente = $("#btnImprimirCliente");
+
+    const modalIncluirCliente = $("#modalIncluirCliente");
+    const inclRazaoSocial = $("#inclRazaoSocial");
+    const inclCpfCnpj = $("#inclCpfCnpj");
+    const inclContato = $("#inclContato");
+    const inclClienteMsg = $("#inclClienteMsg");
+    const btnInclClienteCancelar = $("#btnInclClienteCancelar");
+    const btnInclClienteSalvar = $("#btnInclClienteSalvar");
+
+    const fecharModalCliente = () => {
+        if (modalIncluirCliente) modalIncluirCliente.classList.remove("is-open");
+        if (inclRazaoSocial) inclRazaoSocial.value = "";
+        if (inclCpfCnpj) inclCpfCnpj.value = "";
+        if (inclContato) inclContato.value = "";
+        if (inclClienteMsg) inclClienteMsg.style.display = "none";
+    };
+
+    if (btnInclClienteCancelar) {
+        btnInclClienteCancelar.addEventListener("click", fecharModalCliente);
+    }
+
+    if (modalIncluirCliente) {
+        modalIncluirCliente.addEventListener("click", (e) => {
+            if (e.target === modalIncluirCliente) fecharModalCliente();
+        });
+    }
+
+    if (btnInclClienteSalvar) {
+        btnInclClienteSalvar.addEventListener("click", async () => {
+            const razao_social = inclRazaoSocial.value.trim();
+            const cpf_cnpj = inclCpfCnpj.value.trim();
+            const contato = inclContato.value.trim();
+            if (!razao_social) {
+                inclClienteMsg.className = "msg is-danger";
+                inclClienteMsg.innerHTML = "A raz\u00e3o social n\u00e3o pode ficar em branco.";
+                inclClienteMsg.style.display = "flex";
+                return;
+            }
+            if (!cpf_cnpj) {
+                inclClienteMsg.className = "msg is-danger";
+                inclClienteMsg.innerHTML = "O CPF/CNPJ n\u00e3o pode ficar em branco.";
+                inclClienteMsg.style.display = "flex";
+                return;
+            }
+            if (!contato) {
+                inclClienteMsg.className = "msg is-danger";
+                inclClienteMsg.innerHTML = "O contato n\u00e3o pode ficar em branco.";
+                inclClienteMsg.style.display = "flex";
+                return;
+            }
+            try {
+                const res = await fetch(`${API_URL}/api/clientes`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ razao_social, cpf_cnpj, contato })
+                });
+                const dados = await res.json();
+                if (dados.success) {
+                    fecharModalCliente();
+                    await carregarClientes();
+                } else {
+                    inclClienteMsg.className = "msg is-danger";
+                    inclClienteMsg.innerHTML = dados.message || "Erro ao cadastrar cliente.";
+                    inclClienteMsg.style.display = "flex";
+                }
+            } catch (_) {
+                inclClienteMsg.className = "msg is-danger";
+                inclClienteMsg.innerHTML = "Servidor offline.";
+                inclClienteMsg.style.display = "flex";
+            }
+        });
+    }
+
+    if (btnIncluirCliente) {
+        btnIncluirCliente.addEventListener("click", () => {
+            fecharModalCliente();
+            if (modalIncluirCliente) modalIncluirCliente.classList.add("is-open");
+        });
+    }
+
+    if (btnImprimirCliente) {
+        btnImprimirCliente.addEventListener("click", () => {
+            window.print();
+        });
+    }
+
+    if (btnExcluirCliente) {
+        btnExcluirCliente.addEventListener("click", async () => {
+            const selecionados = document.querySelectorAll('#clientesBody input[type="checkbox"]:checked');
+            if (selecionados.length === 0) {
+                alert("Por favor, selecione um cliente na lista.");
+                return;
+            }
+            const ids = Array.from(selecionados).map(cb => cb.dataset.id).join(", ");
+            const confirmado = confirm(`Excluir os clientes com ID: ${ids}?`);
+            if (!confirmado) return;
+            const erros = [];
+            for (const cb of selecionados) {
+                try {
+                    const res = await fetch(`${API_URL}/api/clientes/${cb.dataset.id}`, {
+                        method: "DELETE"
+                    });
+                    const dados = await res.json();
+                    if (!dados.success) erros.push(cb.dataset.id);
+                } catch (_) {
+                    erros.push(cb.dataset.id);
+                }
+            }
+            if (erros.length > 0) {
+                alert(`Falha ao excluir IDs: ${erros.join(", ")}`);
+            } else {
+                alert("Cliente(s) exclu\u00eddo(s) com sucesso.");
+            }
+            await carregarClientes();
+        });
+    }
+};
+
 const initLogout = () => {
     const btn = $("#btnLogout");
     if (btn) {
@@ -378,5 +534,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (page === "login") initLogin();
     if (page === "cadastro") initCadastro();
     if (page === "cadastros") initCadastros();
+    if (page === "clientes") initClientes();
     initLogout();
 });

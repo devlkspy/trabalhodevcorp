@@ -26,6 +26,9 @@ const db = mysql.createConnection({
 db.connect((err) => {
   if (err) throw err;
   console.log('Conectado ao banco PubliADS (Aiven) com sucesso!');
+  db.query('CREATE TABLE IF NOT EXISTS tbClientes (id INT AUTO_INCREMENT PRIMARY KEY, razao_social VARCHAR(150) NOT NULL, cpf_cnpj VARCHAR(20) NOT NULL, contato VARCHAR(50) NOT NULL)', (err) => {
+    if (err) throw err;
+  });
 });
 
 app.post('/api/login', (req, res) => {
@@ -99,6 +102,30 @@ app.put('/api/usuarios/:login', (req, res) => {
       res.send({ success: true, message: 'Usuário atualizado com sucesso.' });
     });
   }
+});
+
+app.get('/api/clientes', (req, res) => {
+  db.query('SELECT * FROM tbClientes', (err, results) => {
+    if (err) return res.status(500).send(err);
+    res.send(results);
+  });
+});
+
+app.post('/api/clientes', (req, res) => {
+  const { razao_social, cpf_cnpj, contato } = req.body;
+  db.query('INSERT INTO tbClientes (razao_social, cpf_cnpj, contato) VALUES (?, ?, ?)', [razao_social, cpf_cnpj, contato], (err, result) => {
+    if (err) return res.status(500).send(err);
+    res.send({ success: true, message: 'Cliente cadastrado com sucesso!', id: result.insertId });
+  });
+});
+
+app.delete('/api/clientes/:id', (req, res) => {
+  const { id } = req.params;
+  db.query('DELETE FROM tbClientes WHERE id = ?', [id], (err, result) => {
+    if (err) return res.status(500).send(err);
+    if (result.affectedRows === 0) return res.send({ success: false, message: 'Cliente não encontrado.' });
+    res.send({ success: true, message: 'Cliente excluído com sucesso.' });
+  });
 });
 
 const PORT = process.env.PORT || 3000;

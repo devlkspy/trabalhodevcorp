@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Listar Usuários - PubliADS</title>
+  <title>Clientes - Listar - PubliADS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -95,7 +95,7 @@
     }
   </style>
 </head>
-<body data-page="cadastros">
+<body data-page="clientes">
   <div class="shell">
     <aside class="sidebar">
       <div class="brand">
@@ -107,8 +107,8 @@
       <nav class="nav" aria-label="Navegação">
         <a class="nav__link" href="dashboard.html"><i class="ph ph-squares-four"></i><span>Dashboard</span></a>
         <a class="nav__link" href="anuncios.html"><i class="ph ph-megaphone"></i><span>Campanhas</span></a>
-        <a class="nav__link is-active" href="cadastros.html"><i class="ph ph-users"></i><span>Listar Usuários</span></a>
-        <a class="nav__link" href="clientes.html"><i class="ph ph-address-book"></i><span>Clientes</span></a>
+        <a class="nav__link" href="cadastros.html"><i class="ph ph-users"></i><span>Listar Usuários</span></a>
+        <a class="nav__link is-active" href="clientes.html"><i class="ph ph-address-book"></i><span>Clientes</span></a>
       </nav>
       <div class="sidebar__bottom">
         <button class="btn btn--danger" id="btnLogout"><i class="ph ph-sign-out"></i> Sair</button>
@@ -116,15 +116,14 @@
     </aside>
     <main class="main">
       <div class="topbar">
-        <h1>Usuários</h1>
+        <h1>Clientes - Listar</h1>
       </div>
       <div class="section">
         <div class="section__head">
           <div style="display: flex; gap: 8px;">
-            <button id="btnIncluir" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Incluir</button>
-            <button id="btnEditar" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Editar</button>
-            <button id="btnExcluir" class="btn" style="background:#D32F2F;border-color:#D32F2F;color:#fff;font-weight:600;">Excluir</button>
-            <button id="btnImprimir" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Imprimir</button>
+            <button id="btnIncluirCliente" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Incluir</button>
+            <button id="btnExcluirCliente" class="btn" style="background:#D32F2F;border-color:#D32F2F;color:#fff;font-weight:600;">Excluir</button>
+            <button id="btnImprimirCliente" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Imprimir</button>
           </div>
         </div>
         <div class="section__body">
@@ -134,12 +133,12 @@
                 <tr>
                   <th></th>
                   <th>ID</th>
-                  <th>Nome</th>
-                  <th>E-mail</th>
-                  <th>Perfil</th>
+                  <th>Razão Social</th>
+                  <th>CPF/CNPJ</th>
+                  <th>Contato</th>
                 </tr>
               </thead>
-              <tbody id="usuariosBody">
+              <tbody id="clientesBody">
               </tbody>
             </table>
           </div>
@@ -148,48 +147,25 @@
     </main>
   </div>
 
-  <div id="modalIncluir" class="modal-overlay">
+  <div id="modalIncluirCliente" class="modal-overlay">
     <div class="modal-box">
-      <h2>Incluir Usu&aacute;rio</h2>
+      <h2>Incluir Cliente</h2>
       <div class="field">
-        <label class="label">Nome</label>
-        <input id="inclNome" type="text" class="input" placeholder="Nome completo">
+        <label class="label">Razão Social</label>
+        <input id="inclRazaoSocial" type="text" class="input" placeholder="Razão social ou nome">
       </div>
       <div class="field">
-        <label class="label">E-mail (login)</label>
-        <input id="inclLogin" type="text" class="input" placeholder="ex: lucas@email.com">
+        <label class="label">CPF/CNPJ</label>
+        <input id="inclCpfCnpj" type="text" class="input" placeholder="ex: 000.000.000-00">
       </div>
       <div class="field">
-        <label class="label">Senha</label>
-        <input id="inclSenha" type="password" class="input" placeholder="M&iacute;nimo 6 caracteres">
+        <label class="label">Contato</label>
+        <input id="inclContato" type="text" class="input" placeholder="Telefone ou e-mail">
       </div>
-      <div id="inclMsg" class="msg" style="display:none;"></div>
+      <div id="inclClienteMsg" class="msg" style="display:none;"></div>
       <div class="modal-actions">
-        <button id="btnInclCancelar" class="btn">Cancelar</button>
-        <button id="btnInclSalvar" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Criar Usu&aacute;rio</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="modalEditar" class="modal-overlay">
-    <div class="modal-box">
-      <h2>Editar Usu&aacute;rio</h2>
-      <div class="field">
-        <label class="label">Nome</label>
-        <input id="editNome" type="text" class="input" placeholder="Nome completo">
-      </div>
-      <div class="field">
-        <label class="label">E-mail (login)</label>
-        <input id="editLogin" type="text" class="input" placeholder="E-mail" readonly style="opacity:0.6;cursor:not-allowed;">
-      </div>
-      <div class="field">
-        <label class="label">Nova Senha <span style="color:var(--muted2);font-size:0.8rem;">(deixe em branco para n&atilde;o alterar)</span></label>
-        <input id="editSenha" type="password" class="input" placeholder="Nova senha">
-      </div>
-      <div id="editMsg" class="msg" style="display:none;"></div>
-      <div class="modal-actions">
-        <button id="btnModalCancelar" class="btn">Cancelar</button>
-        <button id="btnModalSalvar" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Salvar</button>
+        <button id="btnInclClienteCancelar" class="btn">Cancelar</button>
+        <button id="btnInclClienteSalvar" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Salvar</button>
       </div>
     </div>
   </div>

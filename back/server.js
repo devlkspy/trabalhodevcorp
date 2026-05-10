@@ -31,10 +31,11 @@ db.connect((err) => {
   db.query('CREATE TABLE IF NOT EXISTS tbClientes (id INT AUTO_INCREMENT PRIMARY KEY, razao_social VARCHAR(150) NOT NULL, cpf_cnpj VARCHAR(20) NOT NULL, contato VARCHAR(50) NOT NULL)', (err) => {
     if (err) console.error('Erro ao criar tbClientes:', err.sqlMessage);
   });
-  db.query('CREATE TABLE IF NOT EXISTS tbPessoas (pessoa_id INT AUTO_INCREMENT PRIMARY KEY, nome VARCHAR(200) NOT NULL, cpf VARCHAR(14) NOT NULL, nascimento DATE, telefone VARCHAR(20), pessoa_tipo_id INT, atualizado_por INT, atualizado_em DATE)', (err) => {
-    if (err) console.error('Erro ao criar tbPessoas:', err.sqlMessage);
-    db.query('ALTER TABLE tbPessoas MODIFY COLUMN pessoa_id INT NOT NULL AUTO_INCREMENT', (err) => {
-      if (err) console.error('Erro ao ajustar pessoa_id:', err.sqlMessage);
+  db.query('CREATE TABLE IF NOT EXISTS tbPessoas (pessoa_id INT, nome VARCHAR(200) NOT NULL, cpf VARCHAR(14) NOT NULL, nascimento DATE, telefone VARCHAR(20), pessoa_tipo_id INT, atualizado_por INT, atualizado_em DATE)', () => {
+    db.query('ALTER TABLE tbPessoas ADD PRIMARY KEY (pessoa_id)', () => {
+      db.query('ALTER TABLE tbPessoas MODIFY COLUMN pessoa_id INT NOT NULL AUTO_INCREMENT', (err) => {
+        if (err) console.error('Erro ao ajustar pessoa_id:', err.sqlMessage);
+      });
     });
   });
 });

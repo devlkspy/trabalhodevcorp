@@ -33,6 +33,9 @@ db.connect((err) => {
   });
   db.query('CREATE TABLE IF NOT EXISTS tbPessoas (pessoa_id INT AUTO_INCREMENT PRIMARY KEY, nome VARCHAR(200) NOT NULL, cpf VARCHAR(14) NOT NULL, nascimento DATE, telefone VARCHAR(20), pessoa_tipo_id INT, atualizado_por INT, atualizado_em DATE)', (err) => {
     if (err) console.error('Erro ao criar tbPessoas:', err.sqlMessage);
+    db.query('ALTER TABLE tbPessoas MODIFY COLUMN pessoa_id INT NOT NULL AUTO_INCREMENT', (err) => {
+      if (err) console.error('Erro ao ajustar pessoa_id:', err.sqlMessage);
+    });
   });
 });
 

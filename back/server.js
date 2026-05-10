@@ -29,6 +29,9 @@ db.connect((err) => {
   db.query('CREATE TABLE IF NOT EXISTS tbClientes (id INT AUTO_INCREMENT PRIMARY KEY, razao_social VARCHAR(150) NOT NULL, cpf_cnpj VARCHAR(20) NOT NULL, contato VARCHAR(50) NOT NULL)', (err) => {
     if (err) throw err;
   });
+  db.query('CREATE TABLE IF NOT EXISTS tbPessoas (pessoa_id INT AUTO_INCREMENT PRIMARY KEY, nome VARCHAR(200) NOT NULL, cpf VARCHAR(14) NOT NULL, nascimento DATE, telefone VARCHAR(20), pessoa_tipo_id INT, atualizado_por INT, atualizado_em DATE)', (err) => {
+    if (err) throw err;
+  });
 });
 
 app.post('/api/login', (req, res) => {
@@ -125,6 +128,30 @@ app.delete('/api/clientes/:id', (req, res) => {
     if (err) return res.status(500).send(err);
     if (result.affectedRows === 0) return res.send({ success: false, message: 'Cliente não encontrado.' });
     res.send({ success: true, message: 'Cliente excluído com sucesso.' });
+  });
+});
+
+app.get('/api/pessoas', (req, res) => {
+  db.query('SELECT pessoa_id, nome, cpf, nascimento, telefone FROM tbPessoas', (err, results) => {
+    if (err) return res.status(500).send(err);
+    res.send(results);
+  });
+});
+
+app.post('/api/pessoas', (req, res) => {
+  const { nome, cpf, nascimento, telefone } = req.body;
+  db.query('INSERT INTO tbPessoas (nome, cpf, nascimento, telefone) VALUES (?, ?, ?, ?)', [nome, cpf, nascimento || null, telefone || null], (err, result) => {
+    if (err) return res.status(500).send(err);
+    res.send({ success: true, message: 'Pessoa cadastrada com sucesso!', id: result.insertId });
+  });
+});
+
+app.delete('/api/pessoas/:id', (req, res) => {
+  const { id } = req.params;
+  db.query('DELETE FROM tbPessoas WHERE pessoa_id = ?', [id], (err, result) => {
+    if (err) return res.status(500).send(err);
+    if (result.affectedRows === 0) return res.send({ success: false, message: 'Pessoa não encontrada.' });
+    res.send({ success: true, message: 'Pessoa excluída com sucesso.' });
   });
 });
 

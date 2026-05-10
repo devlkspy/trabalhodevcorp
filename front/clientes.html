@@ -28,7 +28,7 @@
       border-radius: var(--radius);
       padding: 2rem;
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
       box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
@@ -133,9 +133,10 @@
                 <tr>
                   <th></th>
                   <th>ID</th>
-                  <th>Razão Social</th>
-                  <th>CPF/CNPJ</th>
-                  <th>Contato</th>
+                  <th>Nome</th>
+                  <th>CPF</th>
+                  <th>Nascimento</th>
+                  <th>Telefone</th>
                 </tr>
               </thead>
               <tbody id="clientesBody">
@@ -151,25 +152,30 @@
     <div class="modal-box">
       <h2>Incluir Cliente</h2>
       <div class="field">
-        <label class="label">Razão Social</label>
-        <input id="inclRazaoSocial" type="text" class="input" placeholder="Razão social ou nome">
+        <label class="label">Nome</label>
+        <input id="inclNomePessoa" type="text" class="input" placeholder="Nome completo" maxlength="200">
       </div>
       <div class="field">
-        <label class="label">CPF/CNPJ</label>
-        <input id="inclCpfCnpj" type="text" class="input" placeholder="ex: 000.000.000-00">
+        <label class="label">CPF</label>
+        <input id="inclCpfPessoa" type="text" class="input" placeholder="000.000.000-00" maxlength="14">
       </div>
       <div class="field">
-        <label class="label">Contato</label>
-        <input id="inclContato" type="text" class="input" placeholder="Telefone ou e-mail">
+        <label class="label">Nascimento</label>
+        <input id="inclNascimentoPessoa" type="date" class="input">
       </div>
-      <div id="inclClienteMsg" class="msg" style="display:none;"></div>
+      <div class="field">
+        <label class="label">Telefone</label>
+        <input id="inclTelefonePessoa" type="text" class="input" placeholder="(00) 00000-0000" maxlength="15">
+      </div>
+      <div id="inclPessoaMsg" class="msg" style="display:none;"></div>
       <div class="modal-actions">
-        <button id="btnInclClienteCancelar" class="btn">Cancelar</button>
-        <button id="btnInclClienteSalvar" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Salvar</button>
+        <button id="btnInclPessoaCancelar" class="btn">Cancelar</button>
+        <button id="btnInclPessoaSalvar" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Salvar</button>
       </div>
     </div>
   </div>
 
+  <script src="https://unpkg.com/imask"></script>
   <script src="app.js"></script>
 </body>
 </html>

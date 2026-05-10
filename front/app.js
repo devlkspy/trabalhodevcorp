@@ -365,32 +365,40 @@ const initClientes = async () => {
     const tbody = $("#clientesBody");
     if (!tbody) return;
 
+    const formatarData = (valor) => {
+        if (!valor) return "-";
+        const d = new Date(valor);
+        if (isNaN(d)) return valor;
+        return d.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+    };
+
     const carregarClientes = async () => {
         try {
-            const resposta = await fetch(`${API_URL}/api/clientes`);
+            const resposta = await fetch(`${API_URL}/api/pessoas`);
             const texto = await resposta.text();
             let dados;
             try {
                 dados = JSON.parse(texto);
             } catch (_) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">O servidor est\u00e1 reiniciando. Aguarde cerca de 2 minutos e aperte F5.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted);">O servidor est\u00e1 reiniciando. Aguarde cerca de 2 minutos e aperte F5.</td></tr>`;
                 return;
             }
             tbody.innerHTML = "";
-            dados.forEach((cliente) => {
+            dados.forEach((p) => {
                 const tr = document.createElement("tr");
-                tr.dataset.id = cliente.id;
+                tr.dataset.id = p.pessoa_id;
                 tr.innerHTML = `
-                    <td><input type="checkbox" data-id="${cliente.id}"></td>
-                    <td>${cliente.id}</td>
-                    <td>${cliente.razao_social}</td>
-                    <td>${cliente.cpf_cnpj}</td>
-                    <td>${cliente.contato}</td>
+                    <td><input type="checkbox" data-id="${p.pessoa_id}"></td>
+                    <td>${p.pessoa_id}</td>
+                    <td>${p.nome}</td>
+                    <td>${p.cpf}</td>
+                    <td>${formatarData(p.nascimento)}</td>
+                    <td>${p.telefone || "-"}</td>
                 `;
                 tbody.appendChild(tr);
             });
         } catch (erro) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">O servidor est\u00e1 reiniciando. Aguarde cerca de 2 minutos e aperte F5.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted);">O servidor est\u00e1 reiniciando. Aguarde cerca de 2 minutos e aperte F5.</td></tr>`;
         }
     };
 
@@ -401,23 +409,49 @@ const initClientes = async () => {
     const btnImprimirCliente = $("#btnImprimirCliente");
 
     const modalIncluirCliente = $("#modalIncluirCliente");
-    const inclRazaoSocial = $("#inclRazaoSocial");
-    const inclCpfCnpj = $("#inclCpfCnpj");
-    const inclContato = $("#inclContato");
-    const inclClienteMsg = $("#inclClienteMsg");
-    const btnInclClienteCancelar = $("#btnInclClienteCancelar");
-    const btnInclClienteSalvar = $("#btnInclClienteSalvar");
+    const inclNomePessoa = $("#inclNomePessoa");
+    const inclCpfPessoa = $("#inclCpfPessoa");
+    const inclNascimentoPessoa = $("#inclNascimentoPessoa");
+    const inclTelefonePessoa = $("#inclTelefonePessoa");
+    const inclPessoaMsg = $("#inclPessoaMsg");
+    const btnInclPessoaCancelar = $("#btnInclPessoaCancelar");
+    const btnInclPessoaSalvar = $("#btnInclPessoaSalvar");
+
+    let maskCpf = null;
+    let maskTelefone = null;
+
+    if (inclCpfPessoa && typeof IMask !== "undefined") {
+        maskCpf = IMask(inclCpfPessoa, { mask: "000.000.000-00" });
+    }
+
+    if (inclTelefonePessoa && typeof IMask !== "undefined") {
+        maskTelefone = IMask(inclTelefonePessoa, {
+            mask: [
+                { mask: "(00) 0000-0000" },
+                { mask: "(00) 00000-0000" }
+            ],
+            dispatch: (appended, dynamicMasked) => {
+                const number = (dynamicMasked.value + appended).replace(/\D/g, "");
+                return number.length <= 10
+                    ? dynamicMasked.compiledMasks[0]
+                    : dynamicMasked.compiledMasks[1];
+            }
+        });
+    }
 
     const fecharModalCliente = () => {
         if (modalIncluirCliente) modalIncluirCliente.classList.remove("is-open");
-        if (inclRazaoSocial) inclRazaoSocial.value = "";
-        if (inclCpfCnpj) inclCpfCnpj.value = "";
-        if (inclContato) inclContato.value = "";
-        if (inclClienteMsg) inclClienteMsg.style.display = "none";
+        if (inclNomePessoa) inclNomePessoa.value = "";
+        if (maskCpf) maskCpf.unmaskedValue = "";
+        else if (inclCpfPessoa) inclCpfPessoa.value = "";
+        if (inclNascimentoPessoa) inclNascimentoPessoa.value = "";
+        if (maskTelefone) maskTelefone.unmaskedValue = "";
+        else if (inclTelefonePessoa) inclTelefonePessoa.value = "";
+        if (inclPessoaMsg) inclPessoaMsg.style.display = "none";
     };
 
-    if (btnInclClienteCancelar) {
-        btnInclClienteCancelar.addEventListener("click", fecharModalCliente);
+    if (btnInclPessoaCancelar) {
+        btnInclPessoaCancelar.addEventListener("click", fecharModalCliente);
     }
 
     if (modalIncluirCliente) {
@@ -426,48 +460,43 @@ const initClientes = async () => {
         });
     }
 
-    if (btnInclClienteSalvar) {
-        btnInclClienteSalvar.addEventListener("click", async () => {
-            const razao_social = inclRazaoSocial.value.trim();
-            const cpf_cnpj = inclCpfCnpj.value.trim();
-            const contato = inclContato.value.trim();
-            if (!razao_social) {
-                inclClienteMsg.className = "msg is-danger";
-                inclClienteMsg.innerHTML = "A raz\u00e3o social n\u00e3o pode ficar em branco.";
-                inclClienteMsg.style.display = "flex";
+    if (btnInclPessoaSalvar) {
+        btnInclPessoaSalvar.addEventListener("click", async () => {
+            const nome = inclNomePessoa ? inclNomePessoa.value.trim() : "";
+            const cpf = inclCpfPessoa ? inclCpfPessoa.value.trim() : "";
+            const nascimento = inclNascimentoPessoa ? inclNascimentoPessoa.value : "";
+            const telefone = inclTelefonePessoa ? inclTelefonePessoa.value.trim() : "";
+            if (!nome) {
+                inclPessoaMsg.className = "msg is-danger";
+                inclPessoaMsg.innerHTML = "O nome n\u00e3o pode ficar em branco.";
+                inclPessoaMsg.style.display = "flex";
                 return;
             }
-            if (!cpf_cnpj) {
-                inclClienteMsg.className = "msg is-danger";
-                inclClienteMsg.innerHTML = "O CPF/CNPJ n\u00e3o pode ficar em branco.";
-                inclClienteMsg.style.display = "flex";
-                return;
-            }
-            if (!contato) {
-                inclClienteMsg.className = "msg is-danger";
-                inclClienteMsg.innerHTML = "O contato n\u00e3o pode ficar em branco.";
-                inclClienteMsg.style.display = "flex";
+            if (!cpf) {
+                inclPessoaMsg.className = "msg is-danger";
+                inclPessoaMsg.innerHTML = "O CPF n\u00e3o pode ficar em branco.";
+                inclPessoaMsg.style.display = "flex";
                 return;
             }
             try {
-                const res = await fetch(`${API_URL}/api/clientes`, {
+                const res = await fetch(`${API_URL}/api/pessoas`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ razao_social, cpf_cnpj, contato })
+                    body: JSON.stringify({ nome, cpf, nascimento: nascimento || null, telefone: telefone || null })
                 });
                 const dados = await res.json();
                 if (dados.success) {
                     fecharModalCliente();
                     await carregarClientes();
                 } else {
-                    inclClienteMsg.className = "msg is-danger";
-                    inclClienteMsg.innerHTML = dados.message || "Erro ao cadastrar cliente.";
-                    inclClienteMsg.style.display = "flex";
+                    inclPessoaMsg.className = "msg is-danger";
+                    inclPessoaMsg.innerHTML = dados.message || "Erro ao cadastrar.";
+                    inclPessoaMsg.style.display = "flex";
                 }
             } catch (_) {
-                inclClienteMsg.className = "msg is-danger";
-                inclClienteMsg.innerHTML = "Servidor offline.";
-                inclClienteMsg.style.display = "flex";
+                inclPessoaMsg.className = "msg is-danger";
+                inclPessoaMsg.innerHTML = "Servidor offline.";
+                inclPessoaMsg.style.display = "flex";
             }
         });
     }
@@ -498,7 +527,7 @@ const initClientes = async () => {
             const erros = [];
             for (const cb of selecionados) {
                 try {
-                    const res = await fetch(`${API_URL}/api/clientes/${cb.dataset.id}`, {
+                    const res = await fetch(`${API_URL}/api/pessoas/${cb.dataset.id}`, {
                         method: "DELETE"
                     });
                     const dados = await res.json();

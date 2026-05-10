@@ -484,7 +484,15 @@ const initClientes = async () => {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ nome, cpf, nascimento: nascimento || null, telefone: telefone || null })
                 });
-                const dados = await res.json();
+                let dados;
+                try {
+                    dados = await res.json();
+                } catch (_) {
+                    inclPessoaMsg.className = "msg is-danger";
+                    inclPessoaMsg.innerHTML = "O servidor n\u00e3o respondeu corretamente. Verifique se o deploy foi atualizado.";
+                    inclPessoaMsg.style.display = "flex";
+                    return;
+                }
                 if (dados.success) {
                     fecharModalCliente();
                     await carregarClientes();
@@ -495,7 +503,7 @@ const initClientes = async () => {
                 }
             } catch (_) {
                 inclPessoaMsg.className = "msg is-danger";
-                inclPessoaMsg.innerHTML = "Servidor offline.";
+                inclPessoaMsg.innerHTML = "Servidor offline ou sem conex\u00e3o.";
                 inclPessoaMsg.style.display = "flex";
             }
         });

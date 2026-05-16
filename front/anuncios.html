@@ -162,17 +162,19 @@
     <div class="modal-box">
       <h2>Incluir Anúncio</h2>
       <div class="field">
-        <label class="label">Título</label>
-        <input id="inclTituloAnuncio" type="text" class="input" placeholder="Título do anúncio" maxlength="100">
+        <label class="label">Título <span id="inclTituloHint" style="font-size:0.78rem;color:var(--muted2);float:right;">0/100</span></label>
+        <input id="inclTituloAnuncio" type="text" class="input" placeholder="Mínimo 5 caracteres" maxlength="100">
+        <small id="inclTituloErr" style="color:var(--danger);display:none;font-size:0.8rem;"></small>
       </div>
       <div class="field">
-        <label class="label">Descrição</label>
-        <textarea id="inclDescricaoAnuncio" class="input textarea" placeholder="Descrição do anúncio" maxlength="200"></textarea>
+        <label class="label">Descrição <span id="inclDescricaoHint" style="font-size:0.78rem;color:var(--muted2);float:right;">0/200</span></label>
+        <textarea id="inclDescricaoAnuncio" class="input textarea" placeholder="Mínimo 15 caracteres" maxlength="200"></textarea>
+        <small id="inclDescricaoErr" style="color:var(--danger);display:none;font-size:0.8rem;"></small>
       </div>
       <div class="fields-row">
         <div class="field">
           <label class="label">Valor (R$)</label>
-          <input id="inclValorAnuncio" type="number" class="input" placeholder="0.00" min="0" step="0.01">
+          <input id="inclValorAnuncio" type="text" class="input" placeholder="R$ 0,00" inputmode="numeric">
         </div>
         <div class="field">
           <label class="label">Plataforma</label>
@@ -210,17 +212,19 @@
       <h2>Editar Anúncio</h2>
       <input type="hidden" id="editIdAnuncio">
       <div class="field">
-        <label class="label">Título</label>
-        <input id="editTituloAnuncio" type="text" class="input" placeholder="Título do anúncio" maxlength="100">
+        <label class="label">Título <span id="editTituloHint" style="font-size:0.78rem;color:var(--muted2);float:right;">0/100</span></label>
+        <input id="editTituloAnuncio" type="text" class="input" placeholder="Mínimo 5 caracteres" maxlength="100">
+        <small id="editTituloErr" style="color:var(--danger);display:none;font-size:0.8rem;"></small>
       </div>
       <div class="field">
-        <label class="label">Descrição</label>
-        <textarea id="editDescricaoAnuncio" class="input textarea" placeholder="Descrição do anúncio" maxlength="200"></textarea>
+        <label class="label">Descrição <span id="editDescricaoHint" style="font-size:0.78rem;color:var(--muted2);float:right;">0/200</span></label>
+        <textarea id="editDescricaoAnuncio" class="input textarea" placeholder="Mínimo 15 caracteres" maxlength="200"></textarea>
+        <small id="editDescricaoErr" style="color:var(--danger);display:none;font-size:0.8rem;"></small>
       </div>
       <div class="fields-row">
         <div class="field">
           <label class="label">Valor (R$)</label>
-          <input id="editValorAnuncio" type="number" class="input" placeholder="0.00" min="0" step="0.01">
+          <input id="editValorAnuncio" type="text" class="input" placeholder="R$ 0,00" inputmode="numeric">
         </div>
         <div class="field">
           <label class="label">Plataforma</label>
@@ -253,6 +257,7 @@
     </div>
   </div>
 
+  <script src="https://unpkg.com/imask"></script>
   <script src="app.js"></script>
 </body>
 </html>

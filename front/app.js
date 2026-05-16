@@ -684,10 +684,65 @@ const initAnuncios = async () => {
         try { return JSON.parse(raw); } catch (_) { return null; }
     };
 
+    let maskInclValor = null;
+    let maskEditValor = null;
+
+    const inclValorEl = $("#inclValorAnuncio");
+    const editValorEl = $("#editValorAnuncio");
+    const inclTituloHint = $("#inclTituloHint");
+    const inclTituloErr = $("#inclTituloErr");
+    const inclDescricaoHint = $("#inclDescricaoHint");
+    const inclDescricaoErr = $("#inclDescricaoErr");
+    const editTituloHint = $("#editTituloHint");
+    const editTituloErr = $("#editTituloErr");
+    const editDescricaoHint = $("#editDescricaoHint");
+    const editDescricaoErr = $("#editDescricaoErr");
+
+    const maskOpts = {
+        mask: "R$ num",
+        blocks: {
+            num: {
+                mask: Number,
+                scale: 2,
+                thousandsSeparator: ".",
+                padFractionalZeros: true,
+                normalizeZeros: true,
+                radix: ",",
+                mapToRadix: ["."]
+            }
+        }
+    };
+
+    if (inclValorEl && typeof IMask !== "undefined") maskInclValor = IMask(inclValorEl, maskOpts);
+    if (editValorEl && typeof IMask !== "undefined") maskEditValor = IMask(editValorEl, maskOpts);
+
+    const setupCharCounter = (inputEl, hintEl, errEl, min, max, minMsg) => {
+        if (!inputEl || !hintEl) return;
+        const update = () => {
+            const len = inputEl.value.length;
+            hintEl.textContent = len + "/" + max;
+            if (errEl) {
+                if (len > 0 && len < min) {
+                    errEl.textContent = minMsg;
+                    errEl.style.display = "block";
+                } else {
+                    errEl.style.display = "none";
+                }
+            }
+        };
+        inputEl.addEventListener("input", update);
+        update();
+    };
+
+    setupCharCounter(inclTitulo, inclTituloHint, inclTituloErr, 5, 100, "Mínimo de 5 caracteres.");
+    setupCharCounter(inclDescricao, inclDescricaoHint, inclDescricaoErr, 15, 200, "Mínimo de 15 caracteres.");
+    setupCharCounter(editTitulo, editTituloHint, editTituloErr, 5, 100, "Mínimo de 5 caracteres.");
+    setupCharCounter(editDescricao, editDescricaoHint, editDescricaoErr, 15, 200, "Mínimo de 15 caracteres.");
+
     const limparModalIncluir = () => {
-        if (inclTitulo) inclTitulo.value = "";
-        if (inclDescricao) inclDescricao.value = "";
-        if (inclValor) inclValor.value = "";
+        if (inclTitulo) { inclTitulo.value = ""; if (inclTituloHint) inclTituloHint.textContent = "0/100"; if (inclTituloErr) inclTituloErr.style.display = "none"; }
+        if (inclDescricao) { inclDescricao.value = ""; if (inclDescricaoHint) inclDescricaoHint.textContent = "0/200"; if (inclDescricaoErr) inclDescricaoErr.style.display = "none"; }
+        if (maskInclValor) maskInclValor.unmaskedValue = ""; else if (inclValorEl) inclValorEl.value = "";
         if (inclDataInicio) inclDataInicio.value = "";
         if (inclDataFim) inclDataFim.value = "";
         if (inclClienteSel) inclClienteSel.value = "";
@@ -710,22 +765,34 @@ const initAnuncios = async () => {
     if (btnEditCancelar) btnEditCancelar.addEventListener("click", fecharModalEditar);
     if (modalEditar) modalEditar.addEventListener("click", (e) => { if (e.target === modalEditar) fecharModalEditar(); });
 
-    const validarCampos = (titulo, descricao, valor, dataInicio, dataFim, msgEl) => {
-        if (!titulo) {
+    const validarCampos = (titulo, descricao, valorNum, dataInicio, dataFim, msgEl) => {
+        if (!titulo || titulo.length < 5) {
             msgEl.className = "msg is-danger";
-            msgEl.innerHTML = "O título não pode ficar em branco.";
+            msgEl.innerHTML = "O título deve ter no mínimo 5 caracteres.";
             msgEl.style.display = "flex";
             return false;
         }
-        if (!descricao) {
+        if (titulo.length > 100) {
             msgEl.className = "msg is-danger";
-            msgEl.innerHTML = "A descrição não pode ficar em branco.";
+            msgEl.innerHTML = "O título deve ter no máximo 100 caracteres.";
             msgEl.style.display = "flex";
             return false;
         }
-        if (!valor || isNaN(parseFloat(valor)) || parseFloat(valor) < 0) {
+        if (!descricao || descricao.length < 15) {
             msgEl.className = "msg is-danger";
-            msgEl.innerHTML = "Informe um valor válido.";
+            msgEl.innerHTML = "A descrição deve ter no mínimo 15 caracteres.";
+            msgEl.style.display = "flex";
+            return false;
+        }
+        if (descricao.length > 200) {
+            msgEl.className = "msg is-danger";
+            msgEl.innerHTML = "A descrição deve ter no máximo 200 caracteres.";
+            msgEl.style.display = "flex";
+            return false;
+        }
+        if (isNaN(valorNum) || valorNum <= 0) {
+            msgEl.className = "msg is-danger";
+            msgEl.innerHTML = "Informe um valor válido maior que zero.";
             msgEl.style.display = "flex";
             return false;
         }
@@ -754,12 +821,12 @@ const initAnuncios = async () => {
         btnInclSalvar.addEventListener("click", async () => {
             const titulo = inclTitulo ? inclTitulo.value.trim() : "";
             const descricao = inclDescricao ? inclDescricao.value.trim() : "";
-            const valor = inclValor ? inclValor.value.trim() : "";
+            const valorNum = maskInclValor ? parseFloat(maskInclValor.unmaskedValue) / 100 : NaN;
             const dataInicio = inclDataInicio ? inclDataInicio.value : "";
             const dataFim = inclDataFim ? inclDataFim.value : "";
             const clienteId = inclClienteSel ? inclClienteSel.value : "";
             const plataformaId = inclPlataformaSel ? inclPlataformaSel.value : "";
-            if (!validarCampos(titulo, descricao, valor, dataInicio, dataFim, inclMsg)) return;
+            if (!validarCampos(titulo, descricao, valorNum, dataInicio, dataFim, inclMsg)) return;
             const sessao = getSession();
             try {
                 const res = await fetch(`${API_URL}/api/anuncios`, {
@@ -768,7 +835,7 @@ const initAnuncios = async () => {
                     body: JSON.stringify({
                         titulo,
                         descricao,
-                        valor: parseFloat(valor),
+                        valor: valorNum,
                         data_inico: dataInicio,
                         data_fim: dataFim,
                         cliente_id: clienteId || null,
@@ -804,12 +871,12 @@ const initAnuncios = async () => {
             const id = editId ? editId.value : "";
             const titulo = editTitulo ? editTitulo.value.trim() : "";
             const descricao = editDescricao ? editDescricao.value.trim() : "";
-            const valor = editValor ? editValor.value.trim() : "";
+            const valorNum = maskEditValor ? parseFloat(maskEditValor.unmaskedValue) / 100 : NaN;
             const dataInicio = editDataInicio ? editDataInicio.value : "";
             const dataFim = editDataFim ? editDataFim.value : "";
             const clienteId = editClienteSel ? editClienteSel.value : "";
             const plataformaId = editPlataformaSel ? editPlataformaSel.value : "";
-            if (!validarCampos(titulo, descricao, valor, dataInicio, dataFim, editMsg)) return;
+            if (!validarCampos(titulo, descricao, valorNum, dataInicio, dataFim, editMsg)) return;
             const sessao = getSession();
             try {
                 const res = await fetch(`${API_URL}/api/anuncios/${id}`, {
@@ -818,7 +885,7 @@ const initAnuncios = async () => {
                     body: JSON.stringify({
                         titulo,
                         descricao,
-                        valor: parseFloat(valor),
+                        valor: valorNum,
                         data_inico: dataInicio,
                         data_fim: dataFim,
                         cliente_id: clienteId || null,
@@ -876,12 +943,19 @@ const initAnuncios = async () => {
             fetch(`${API_URL}/api/anuncios/${cells[1].textContent.trim()}`)
                 .then(r => r.json())
                 .then(anuncio => {
-                    if (editDescricao) editDescricao.value = anuncio.descricao || "";
-                    if (editValor) editValor.value = anuncio.valor || "";
+                    if (editDescricao) {
+                        editDescricao.value = anuncio.descricao || "";
+                        editDescricao.dispatchEvent(new Event("input"));
+                    }
+                    if (maskEditValor && anuncio.valor != null) {
+                        const cents = Math.round(parseFloat(anuncio.valor) * 100).toString();
+                        maskEditValor.unmaskedValue = cents;
+                    }
                     if (editDataInicio) editDataInicio.value = anuncio.data_inico ? anuncio.data_inico.split("T")[0] : "";
                     if (editDataFim) editDataFim.value = anuncio.data_fim ? anuncio.data_fim.split("T")[0] : "";
                     if (editClienteSel) editClienteSel.value = anuncio.cliente_id || "";
                     if (editPlataformaSel) editPlataformaSel.value = anuncio.plataforma_id || "";
+                    if (editTitulo) editTitulo.dispatchEvent(new Event("input"));
                     if (modalEditar) modalEditar.classList.add("is-open");
                 })
                 .catch(() => {

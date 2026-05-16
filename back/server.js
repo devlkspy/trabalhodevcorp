@@ -134,10 +134,22 @@ app.get('/api/pessoas', (req, res) => {
 app.post('/api/pessoas', (req, res) => {
   const { nome, cpf, nascimento, telefone, pessoa_tipo_id, atualizado_por } = req.body;
   const atualizado_em = new Date();
-  const uid = parseInt(atualizado_por) || null;
-  db.query('INSERT INTO tbPessoas (nome, cpf, nascimento, telefone, pessoa_tipo_id, atualizado_por, atualizado_em) VALUES (?, ?, ?, ?, ?, ?, ?)', [nome, cpf, nascimento || null, telefone || null, pessoa_tipo_id || null, uid, atualizado_em], (err, result) => {
-    if (err) return dbErr(err, res);
-    res.json({ success: true, message: 'Pessoa cadastrada com sucesso!', id: result.insertId });
+  const resolverUid = (valor, cb) => {
+    const num = parseInt(valor);
+    if (!isNaN(num) && num > 0) return cb(num);
+    if (valor && typeof valor === 'string' && valor.includes('@')) {
+      return db.query('SELECT usuario_id FROM tbUsuarios WHERE login = ? LIMIT 1', [valor], (err, rows) => {
+        if (!err && rows.length > 0) return cb(rows[0].usuario_id);
+        return cb(1);
+      });
+    }
+    return cb(1);
+  };
+  resolverUid(atualizado_por, (uid) => {
+    db.query('INSERT INTO tbPessoas (nome, cpf, nascimento, telefone, pessoa_tipo_id, atualizado_por, atualizado_em) VALUES (?, ?, ?, ?, ?, ?, ?)', [nome, cpf, nascimento || null, telefone || null, pessoa_tipo_id || null, uid, atualizado_em], (err, result) => {
+      if (err) return dbErr(err, res);
+      res.json({ success: true, message: 'Pessoa cadastrada com sucesso!', id: result.insertId });
+    });
   });
 });
 

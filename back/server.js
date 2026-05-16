@@ -31,10 +31,23 @@ db.connect((err) => {
   db.query('CREATE TABLE IF NOT EXISTS tbClientes (id INT AUTO_INCREMENT PRIMARY KEY, razao_social VARCHAR(150) NOT NULL, cpf_cnpj VARCHAR(20) NOT NULL, contato VARCHAR(50) NOT NULL)', (err) => {
     if (err) console.error('Erro ao criar tbClientes:', err.sqlMessage);
   });
-  db.query('DROP TABLE IF EXISTS tbPessoas', () => {
-    db.query('CREATE TABLE tbPessoas (pessoa_id INT AUTO_INCREMENT PRIMARY KEY, nome VARCHAR(200) NOT NULL, cpf VARCHAR(14) NOT NULL, nascimento DATE, telefone VARCHAR(20), pessoa_tipo_id INT, atualizado_por INT, atualizado_em DATE)', (err) => {
-      if (err) console.error('Erro ao criar tbPessoas:', err.sqlMessage);
-    });
+  db.query('CREATE TABLE IF NOT EXISTS tbPessoas (pessoa_id INT AUTO_INCREMENT PRIMARY KEY, nome VARCHAR(200) NOT NULL, cpf VARCHAR(14) NOT NULL, nascimento DATE, telefone VARCHAR(20), pessoa_tipo_id INT, atualizado_por INT, atualizado_em DATE)', (err) => {
+    if (err) console.error('Erro ao criar tbPessoas:', err.sqlMessage);
+  });
+  db.query('CREATE TABLE IF NOT EXISTS tbPlataforma (plataforma_id INT AUTO_INCREMENT PRIMARY KEY, nome VARCHAR(100) NOT NULL)', (err) => {
+    if (err) console.error('Erro ao criar tbPlataforma:', err.sqlMessage);
+    else {
+      db.query('SELECT COUNT(*) AS total FROM tbPlataforma', (err2, rows) => {
+        if (!err2 && rows[0].total === 0) {
+          db.query("INSERT INTO tbPlataforma (nome) VALUES ('Google Ads'), ('Meta Ads'), ('TikTok Ads'), ('LinkedIn Ads'), ('Twitter Ads'), ('YouTube Ads')", (err3) => {
+            if (err3) console.error('Erro ao popular tbPlataforma:', err3.sqlMessage);
+          });
+        }
+      });
+    }
+  });
+  db.query('CREATE TABLE IF NOT EXISTS tbAnuncio (anuncio_id INT AUTO_INCREMENT PRIMARY KEY, titulo VARCHAR(100) NOT NULL, descricao VARCHAR(200) NOT NULL, valor DECIMAL(10,2) NOT NULL, data_inico DATE NOT NULL, data_fim DATE NOT NULL, cliente_id INT, plataforma_id INT, atualizado_por VARCHAR(200), atualizado_em DATETIME)', (err) => {
+    if (err) console.error('Erro ao criar tbAnuncio:', err.sqlMessage);
   });
 });
 
@@ -129,6 +142,60 @@ app.get('/api/pessoas', (req, res) => {
   db.query('SELECT pessoa_id, nome, cpf, nascimento, telefone FROM tbPessoas', (err, results) => {
     if (err) return dbErr(err, res);
     res.json(results);
+  });
+});
+
+app.get('/api/plataformas', (req, res) => {
+  db.query('SELECT plataforma_id, nome FROM tbPlataforma ORDER BY nome', (err, results) => {
+    if (err) return dbErr(err, res);
+    res.json(results);
+  });
+});
+
+app.get('/api/anuncios', (req, res) => {
+  const sql = `SELECT a.anuncio_id, a.titulo, a.descricao, a.valor, a.data_inico, a.data_fim, a.cliente_id, a.plataforma_id, a.atualizado_por, a.atualizado_em, p.nome AS cliente_nome, pl.nome AS plataforma_nome FROM tbAnuncio a LEFT JOIN tbPessoas p ON a.cliente_id = p.pessoa_id LEFT JOIN tbPlataforma pl ON a.plataforma_id = pl.plataforma_id ORDER BY a.anuncio_id DESC`;
+  db.query(sql, (err, results) => {
+    if (err) return dbErr(err, res);
+    res.json(results);
+  });
+});
+
+app.get('/api/anuncios/:id', (req, res) => {
+  const { id } = req.params;
+  const sql = `SELECT a.anuncio_id, a.titulo, a.descricao, a.valor, a.data_inico, a.data_fim, a.cliente_id, a.plataforma_id, a.atualizado_por, a.atualizado_em, p.nome AS cliente_nome, pl.nome AS plataforma_nome FROM tbAnuncio a LEFT JOIN tbPessoas p ON a.cliente_id = p.pessoa_id LEFT JOIN tbPlataforma pl ON a.plataforma_id = pl.plataforma_id WHERE a.anuncio_id = ?`;
+  db.query(sql, [id], (err, results) => {
+    if (err) return dbErr(err, res);
+    if (results.length === 0) return res.json({ success: false, message: 'Anúncio não encontrado.' });
+    res.json(results[0]);
+  });
+});
+
+app.post('/api/anuncios', (req, res) => {
+  const { titulo, descricao, valor, data_inico, data_fim, cliente_id, plataforma_id, atualizado_por } = req.body;
+  const atualizado_em = new Date();
+  db.query('INSERT INTO tbAnuncio (titulo, descricao, valor, data_inico, data_fim, cliente_id, plataforma_id, atualizado_por, atualizado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [titulo, descricao, valor, data_inico, data_fim, cliente_id || null, plataforma_id || null, atualizado_por || null, atualizado_em], (err, result) => {
+    if (err) return dbErr(err, res);
+    res.json({ success: true, message: 'Anúncio cadastrado com sucesso!', id: result.insertId });
+  });
+});
+
+app.put('/api/anuncios/:id', (req, res) => {
+  const { id } = req.params;
+  const { titulo, descricao, valor, data_inico, data_fim, cliente_id, plataforma_id, atualizado_por } = req.body;
+  const atualizado_em = new Date();
+  db.query('UPDATE tbAnuncio SET titulo = ?, descricao = ?, valor = ?, data_inico = ?, data_fim = ?, cliente_id = ?, plataforma_id = ?, atualizado_por = ?, atualizado_em = ? WHERE anuncio_id = ?', [titulo, descricao, valor, data_inico, data_fim, cliente_id || null, plataforma_id || null, atualizado_por || null, atualizado_em, id], (err, result) => {
+    if (err) return dbErr(err, res);
+    if (result.affectedRows === 0) return res.json({ success: false, message: 'Anúncio não encontrado.' });
+    res.json({ success: true, message: 'Anúncio atualizado com sucesso.' });
+  });
+});
+
+app.delete('/api/anuncios/:id', (req, res) => {
+  const { id } = req.params;
+  db.query('DELETE FROM tbAnuncio WHERE anuncio_id = ?', [id], (err, result) => {
+    if (err) return dbErr(err, res);
+    if (result.affectedRows === 0) return res.json({ success: false, message: 'Anúncio não encontrado.' });
+    res.json({ success: true, message: 'Anúncio excluído com sucesso.' });
   });
 });
 

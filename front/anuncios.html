@@ -3,12 +3,104 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gestão de Anúncios - PubliADS</title>
+  <title>Anúncios - PubliADS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.is-open {
+      display: flex;
+    }
+    .modal-box {
+      background: var(--bg0);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-box h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    .modal-box .field {
+      display: grid;
+      gap: 0.5rem;
+    }
+    .modal-box .label {
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .fields-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media print {
+      .sidebar, .topbar, .section__head, .shell > aside {
+        display: none !important;
+      }
+      .shell {
+        display: block !important;
+      }
+      .main {
+        height: auto !important;
+        overflow: visible !important;
+        padding: 0 !important;
+      }
+      .section {
+        border: none !important;
+      }
+      .section__body {
+        padding: 0 !important;
+      }
+      .table-wrap {
+        border: none !important;
+        overflow: visible !important;
+      }
+      table {
+        min-width: 0 !important;
+        width: 100% !important;
+      }
+      th, td {
+        color: #000 !important;
+        border-color: #ccc !important;
+      }
+      th {
+        background: #f0f0f0 !important;
+      }
+      td:first-child {
+        display: none !important;
+      }
+      th:first-child {
+        display: none !important;
+      }
+    }
+  </style>
 </head>
 <body data-page="anuncios">
   <div class="shell">
@@ -21,7 +113,7 @@
       </div>
       <nav class="nav" aria-label="Navegação">
         <a class="nav__link" href="dashboard.html"><i class="ph ph-squares-four"></i><span>Dashboard</span></a>
-        <a class="nav__link is-active" href="anuncios.html"><i class="ph ph-megaphone"></i><span>Campanhas</span></a>
+        <a class="nav__link is-active" href="anuncios.html"><i class="ph ph-megaphone"></i><span>Anúncios</span></a>
         <a class="nav__link" href="cadastros.html"><i class="ph ph-users"></i><span>Usuários</span></a>
         <a class="nav__link" href="clientes.html"><i class="ph ph-address-book"></i><span>Pessoas</span></a>
       </nav>
@@ -29,10 +121,138 @@
         <button class="btn btn--danger" id="btnLogout"><i class="ph ph-sign-out"></i> Sair</button>
       </div>
     </aside>
-    <main class="main" style="display: flex; justify-content: center; align-items: center; height: 100vh; padding: 0;">
-      <img src="construcao.png" alt="Em construção" style="max-width: 80%; max-height: 80vh; object-fit: contain;">
+    <main class="main">
+      <div class="topbar">
+        <h1>Anúncios</h1>
+      </div>
+      <div class="section">
+        <div class="section__head">
+          <div style="display: flex; gap: 8px;">
+            <button id="btnIncluirAnuncio" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Incluir</button>
+            <button id="btnEditarAnuncio" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Editar</button>
+            <button id="btnExcluirAnuncio" class="btn" style="background:#D32F2F;border-color:#D32F2F;color:#fff;font-weight:600;">Excluir</button>
+            <button id="btnImprimirAnuncio" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Imprimir</button>
+          </div>
+        </div>
+        <div class="section__body">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>ID</th>
+                  <th>Título</th>
+                  <th>Valor</th>
+                  <th>Início</th>
+                  <th>Fim</th>
+                  <th>Cliente</th>
+                  <th>Plataforma</th>
+                </tr>
+              </thead>
+              <tbody id="anunciosBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
+
+  <div id="modalIncluirAnuncio" class="modal-overlay">
+    <div class="modal-box">
+      <h2>Incluir Anúncio</h2>
+      <div class="field">
+        <label class="label">Título</label>
+        <input id="inclTituloAnuncio" type="text" class="input" placeholder="Título do anúncio" maxlength="100">
+      </div>
+      <div class="field">
+        <label class="label">Descrição</label>
+        <textarea id="inclDescricaoAnuncio" class="input textarea" placeholder="Descrição do anúncio" maxlength="200"></textarea>
+      </div>
+      <div class="fields-row">
+        <div class="field">
+          <label class="label">Valor (R$)</label>
+          <input id="inclValorAnuncio" type="number" class="input" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="field">
+          <label class="label">Plataforma</label>
+          <select id="inclPlataformaAnuncio" class="input select">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+      </div>
+      <div class="fields-row">
+        <div class="field">
+          <label class="label">Data de Início</label>
+          <input id="inclDataInicioAnuncio" type="date" class="input">
+        </div>
+        <div class="field">
+          <label class="label">Data de Fim</label>
+          <input id="inclDataFimAnuncio" type="date" class="input">
+        </div>
+      </div>
+      <div class="field">
+        <label class="label">Cliente</label>
+        <select id="inclClienteAnuncio" class="input select">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+      <div id="inclAnuncioMsg" class="msg" style="display:none;"></div>
+      <div class="modal-actions">
+        <button id="btnInclAnuncioCancelar" class="btn">Cancelar</button>
+        <button id="btnInclAnuncioSalvar" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalEditarAnuncio" class="modal-overlay">
+    <div class="modal-box">
+      <h2>Editar Anúncio</h2>
+      <input type="hidden" id="editIdAnuncio">
+      <div class="field">
+        <label class="label">Título</label>
+        <input id="editTituloAnuncio" type="text" class="input" placeholder="Título do anúncio" maxlength="100">
+      </div>
+      <div class="field">
+        <label class="label">Descrição</label>
+        <textarea id="editDescricaoAnuncio" class="input textarea" placeholder="Descrição do anúncio" maxlength="200"></textarea>
+      </div>
+      <div class="fields-row">
+        <div class="field">
+          <label class="label">Valor (R$)</label>
+          <input id="editValorAnuncio" type="number" class="input" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="field">
+          <label class="label">Plataforma</label>
+          <select id="editPlataformaAnuncio" class="input select">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+      </div>
+      <div class="fields-row">
+        <div class="field">
+          <label class="label">Data de Início</label>
+          <input id="editDataInicioAnuncio" type="date" class="input">
+        </div>
+        <div class="field">
+          <label class="label">Data de Fim</label>
+          <input id="editDataFimAnuncio" type="date" class="input">
+        </div>
+      </div>
+      <div class="field">
+        <label class="label">Cliente</label>
+        <select id="editClienteAnuncio" class="input select">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+      <div id="editAnuncioMsg" class="msg" style="display:none;"></div>
+      <div class="modal-actions">
+        <button id="btnEditAnuncioCancelar" class="btn">Cancelar</button>
+        <button id="btnEditAnuncioSalvar" class="btn" style="background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;">Salvar</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

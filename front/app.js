@@ -468,15 +468,33 @@ const initClientes = async () => {
             const telefone = inclTelefonePessoa ? inclTelefonePessoa.value.trim() : "";
             if (!nome) {
                 inclPessoaMsg.className = "msg is-danger";
-                inclPessoaMsg.innerHTML = "O nome n\u00e3o pode ficar em branco.";
+                inclPessoaMsg.innerHTML = "O nome não pode ficar em branco.";
                 inclPessoaMsg.style.display = "flex";
                 return;
             }
-            if (!cpf) {
+            if (!cpf || cpf.replace(/\D/g, "").length !== 11) {
                 inclPessoaMsg.className = "msg is-danger";
-                inclPessoaMsg.innerHTML = "O CPF n\u00e3o pode ficar em branco.";
+                inclPessoaMsg.innerHTML = "Digite um CPF válido com 11 dígitos.";
                 inclPessoaMsg.style.display = "flex";
                 return;
+            }
+            if (nascimento) {
+                const dataNasc = new Date(nascimento);
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+                const anoMinimo = new Date(hoje.getFullYear() - 120, hoje.getMonth(), hoje.getDate());
+                if (dataNasc > hoje) {
+                    inclPessoaMsg.className = "msg is-danger";
+                    inclPessoaMsg.innerHTML = "A data de nascimento não pode ser futura.";
+                    inclPessoaMsg.style.display = "flex";
+                    return;
+                }
+                if (dataNasc < anoMinimo) {
+                    inclPessoaMsg.className = "msg is-danger";
+                    inclPessoaMsg.innerHTML = "Data de nascimento inválida (máximo 120 anos atrás).";
+                    inclPessoaMsg.style.display = "flex";
+                    return;
+                }
             }
             try {
                 const res = await fetch(`${API_URL}/api/pessoas`, {
@@ -512,6 +530,13 @@ const initClientes = async () => {
     if (btnIncluirCliente) {
         btnIncluirCliente.addEventListener("click", () => {
             fecharModalCliente();
+            if (inclNascimentoPessoa) {
+                const hoje = new Date();
+                const maxDate = hoje.toISOString().split("T")[0];
+                const minDate = new Date(hoje.getFullYear() - 120, hoje.getMonth(), hoje.getDate()).toISOString().split("T")[0];
+                inclNascimentoPessoa.max = maxDate;
+                inclNascimentoPessoa.min = minDate;
+            }
             if (modalIncluirCliente) modalIncluirCliente.classList.add("is-open");
         });
     }
@@ -554,6 +579,353 @@ const initClientes = async () => {
     }
 };
 
+const initAnuncios = async () => {
+    const tbody = $("#anunciosBody");
+    if (!tbody) return;
+
+    const formatarData = (valor) => {
+        if (!valor) return "-";
+        const d = new Date(valor);
+        if (isNaN(d)) return valor;
+        return d.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+    };
+
+    const formatarValor = (valor) => {
+        if (valor === null || valor === undefined) return "-";
+        return parseFloat(valor).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    };
+
+    const popularSelect = async (selectEl, url, valorCampo, textoCampo) => {
+        try {
+            const res = await fetch(url);
+            const dados = await res.json();
+            dados.forEach((item) => {
+                const opt = document.createElement("option");
+                opt.value = item[valorCampo];
+                opt.textContent = item[textoCampo];
+                selectEl.appendChild(opt);
+            });
+        } catch (_) {}
+    };
+
+    const carregarAnuncios = async () => {
+        try {
+            const resposta = await fetch(`${API_URL}/api/anuncios`);
+            const texto = await resposta.text();
+            let dados;
+            try {
+                dados = JSON.parse(texto);
+            } catch (_) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted);">O servidor está reiniciando. Aguarde cerca de 2 minutos e aperte F5.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = "";
+            dados.forEach((a) => {
+                const tr = document.createElement("tr");
+                tr.dataset.id = a.anuncio_id;
+                tr.innerHTML = `
+                    <td><input type="checkbox" data-id="${a.anuncio_id}"></td>
+                    <td>${a.anuncio_id}</td>
+                    <td>${a.titulo}</td>
+                    <td>${formatarValor(a.valor)}</td>
+                    <td>${formatarData(a.data_inico)}</td>
+                    <td>${formatarData(a.data_fim)}</td>
+                    <td>${a.cliente_nome || "-"}</td>
+                    <td>${a.plataforma_nome || "-"}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (_) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted);">O servidor está reiniciando. Aguarde cerca de 2 minutos e aperte F5.</td></tr>`;
+        }
+    };
+
+    await carregarAnuncios();
+
+    const inclClienteSel = $("#inclClienteAnuncio");
+    const inclPlataformaSel = $("#inclPlataformaAnuncio");
+    const editClienteSel = $("#editClienteAnuncio");
+    const editPlataformaSel = $("#editPlataformaAnuncio");
+
+    if (inclClienteSel) await popularSelect(inclClienteSel, `${API_URL}/api/pessoas`, "pessoa_id", "nome");
+    if (inclPlataformaSel) await popularSelect(inclPlataformaSel, `${API_URL}/api/plataformas`, "plataforma_id", "nome");
+    if (editClienteSel) await popularSelect(editClienteSel, `${API_URL}/api/pessoas`, "pessoa_id", "nome");
+    if (editPlataformaSel) await popularSelect(editPlataformaSel, `${API_URL}/api/plataformas`, "plataforma_id", "nome");
+
+    const btnIncluir = $("#btnIncluirAnuncio");
+    const btnEditar = $("#btnEditarAnuncio");
+    const btnExcluir = $("#btnExcluirAnuncio");
+    const btnImprimir = $("#btnImprimirAnuncio");
+
+    const modalIncluir = $("#modalIncluirAnuncio");
+    const inclTitulo = $("#inclTituloAnuncio");
+    const inclDescricao = $("#inclDescricaoAnuncio");
+    const inclValor = $("#inclValorAnuncio");
+    const inclDataInicio = $("#inclDataInicioAnuncio");
+    const inclDataFim = $("#inclDataFimAnuncio");
+    const inclMsg = $("#inclAnuncioMsg");
+    const btnInclCancelar = $("#btnInclAnuncioCancelar");
+    const btnInclSalvar = $("#btnInclAnuncioSalvar");
+
+    const modalEditar = $("#modalEditarAnuncio");
+    const editId = $("#editIdAnuncio");
+    const editTitulo = $("#editTituloAnuncio");
+    const editDescricao = $("#editDescricaoAnuncio");
+    const editValor = $("#editValorAnuncio");
+    const editDataInicio = $("#editDataInicioAnuncio");
+    const editDataFim = $("#editDataFimAnuncio");
+    const editMsg = $("#editAnuncioMsg");
+    const btnEditCancelar = $("#btnEditAnuncioCancelar");
+    const btnEditSalvar = $("#btnEditAnuncioSalvar");
+
+    const getSession = () => {
+        const raw = localStorage.getItem(sessionKey);
+        if (!raw) return null;
+        try { return JSON.parse(raw); } catch (_) { return null; }
+    };
+
+    const limparModalIncluir = () => {
+        if (inclTitulo) inclTitulo.value = "";
+        if (inclDescricao) inclDescricao.value = "";
+        if (inclValor) inclValor.value = "";
+        if (inclDataInicio) inclDataInicio.value = "";
+        if (inclDataFim) inclDataFim.value = "";
+        if (inclClienteSel) inclClienteSel.value = "";
+        if (inclPlataformaSel) inclPlataformaSel.value = "";
+        if (inclMsg) inclMsg.style.display = "none";
+    };
+
+    const fecharModalIncluir = () => {
+        if (modalIncluir) modalIncluir.classList.remove("is-open");
+        limparModalIncluir();
+    };
+
+    const fecharModalEditar = () => {
+        if (modalEditar) modalEditar.classList.remove("is-open");
+        if (editMsg) editMsg.style.display = "none";
+    };
+
+    if (btnInclCancelar) btnInclCancelar.addEventListener("click", fecharModalIncluir);
+    if (modalIncluir) modalIncluir.addEventListener("click", (e) => { if (e.target === modalIncluir) fecharModalIncluir(); });
+    if (btnEditCancelar) btnEditCancelar.addEventListener("click", fecharModalEditar);
+    if (modalEditar) modalEditar.addEventListener("click", (e) => { if (e.target === modalEditar) fecharModalEditar(); });
+
+    const validarCampos = (titulo, descricao, valor, dataInicio, dataFim, msgEl) => {
+        if (!titulo) {
+            msgEl.className = "msg is-danger";
+            msgEl.innerHTML = "O título não pode ficar em branco.";
+            msgEl.style.display = "flex";
+            return false;
+        }
+        if (!descricao) {
+            msgEl.className = "msg is-danger";
+            msgEl.innerHTML = "A descrição não pode ficar em branco.";
+            msgEl.style.display = "flex";
+            return false;
+        }
+        if (!valor || isNaN(parseFloat(valor)) || parseFloat(valor) < 0) {
+            msgEl.className = "msg is-danger";
+            msgEl.innerHTML = "Informe um valor válido.";
+            msgEl.style.display = "flex";
+            return false;
+        }
+        if (!dataInicio) {
+            msgEl.className = "msg is-danger";
+            msgEl.innerHTML = "Informe a data de início.";
+            msgEl.style.display = "flex";
+            return false;
+        }
+        if (!dataFim) {
+            msgEl.className = "msg is-danger";
+            msgEl.innerHTML = "Informe a data de fim.";
+            msgEl.style.display = "flex";
+            return false;
+        }
+        if (new Date(dataFim) < new Date(dataInicio)) {
+            msgEl.className = "msg is-danger";
+            msgEl.innerHTML = "A data de fim não pode ser anterior à data de início.";
+            msgEl.style.display = "flex";
+            return false;
+        }
+        return true;
+    };
+
+    if (btnInclSalvar) {
+        btnInclSalvar.addEventListener("click", async () => {
+            const titulo = inclTitulo ? inclTitulo.value.trim() : "";
+            const descricao = inclDescricao ? inclDescricao.value.trim() : "";
+            const valor = inclValor ? inclValor.value.trim() : "";
+            const dataInicio = inclDataInicio ? inclDataInicio.value : "";
+            const dataFim = inclDataFim ? inclDataFim.value : "";
+            const clienteId = inclClienteSel ? inclClienteSel.value : "";
+            const plataformaId = inclPlataformaSel ? inclPlataformaSel.value : "";
+            if (!validarCampos(titulo, descricao, valor, dataInicio, dataFim, inclMsg)) return;
+            const sessao = getSession();
+            try {
+                const res = await fetch(`${API_URL}/api/anuncios`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        titulo,
+                        descricao,
+                        valor: parseFloat(valor),
+                        data_inico: dataInicio,
+                        data_fim: dataFim,
+                        cliente_id: clienteId || null,
+                        plataforma_id: plataformaId || null,
+                        atualizado_por: sessao ? sessao.user : null
+                    })
+                });
+                let dados;
+                try { dados = await res.json(); } catch (_) {
+                    inclMsg.className = "msg is-danger";
+                    inclMsg.innerHTML = "O servidor não respondeu corretamente.";
+                    inclMsg.style.display = "flex";
+                    return;
+                }
+                if (dados.success) {
+                    fecharModalIncluir();
+                    await carregarAnuncios();
+                } else {
+                    inclMsg.className = "msg is-danger";
+                    inclMsg.innerHTML = dados.message || "Erro ao cadastrar.";
+                    inclMsg.style.display = "flex";
+                }
+            } catch (_) {
+                inclMsg.className = "msg is-danger";
+                inclMsg.innerHTML = "Servidor offline ou sem conexão.";
+                inclMsg.style.display = "flex";
+            }
+        });
+    }
+
+    if (btnEditSalvar) {
+        btnEditSalvar.addEventListener("click", async () => {
+            const id = editId ? editId.value : "";
+            const titulo = editTitulo ? editTitulo.value.trim() : "";
+            const descricao = editDescricao ? editDescricao.value.trim() : "";
+            const valor = editValor ? editValor.value.trim() : "";
+            const dataInicio = editDataInicio ? editDataInicio.value : "";
+            const dataFim = editDataFim ? editDataFim.value : "";
+            const clienteId = editClienteSel ? editClienteSel.value : "";
+            const plataformaId = editPlataformaSel ? editPlataformaSel.value : "";
+            if (!validarCampos(titulo, descricao, valor, dataInicio, dataFim, editMsg)) return;
+            const sessao = getSession();
+            try {
+                const res = await fetch(`${API_URL}/api/anuncios/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        titulo,
+                        descricao,
+                        valor: parseFloat(valor),
+                        data_inico: dataInicio,
+                        data_fim: dataFim,
+                        cliente_id: clienteId || null,
+                        plataforma_id: plataformaId || null,
+                        atualizado_por: sessao ? sessao.user : null
+                    })
+                });
+                let dados;
+                try { dados = await res.json(); } catch (_) {
+                    editMsg.className = "msg is-danger";
+                    editMsg.innerHTML = "O servidor não respondeu corretamente.";
+                    editMsg.style.display = "flex";
+                    return;
+                }
+                if (dados.success) {
+                    fecharModalEditar();
+                    await carregarAnuncios();
+                } else {
+                    editMsg.className = "msg is-danger";
+                    editMsg.innerHTML = dados.message || "Erro ao salvar.";
+                    editMsg.style.display = "flex";
+                }
+            } catch (_) {
+                editMsg.className = "msg is-danger";
+                editMsg.innerHTML = "Servidor offline ou sem conexão.";
+                editMsg.style.display = "flex";
+            }
+        });
+    }
+
+    if (btnIncluir) {
+        btnIncluir.addEventListener("click", () => {
+            limparModalIncluir();
+            if (modalIncluir) modalIncluir.classList.add("is-open");
+        });
+    }
+
+    if (btnEditar) {
+        btnEditar.addEventListener("click", () => {
+            const selecionados = document.querySelectorAll('#anunciosBody input[type="checkbox"]:checked');
+            if (selecionados.length === 0) {
+                alert("Por favor, selecione um anúncio na lista.");
+                return;
+            }
+            if (selecionados.length > 1) {
+                alert("Selecione apenas um anúncio para editar.");
+                return;
+            }
+            const cb = selecionados[0];
+            const tr = cb.closest("tr");
+            const cells = tr.querySelectorAll("td");
+            if (editId) editId.value = cells[1].textContent.trim();
+            if (editTitulo) editTitulo.value = cells[2].textContent.trim();
+            if (editMsg) editMsg.style.display = "none";
+            fetch(`${API_URL}/api/anuncios/${cells[1].textContent.trim()}`)
+                .then(r => r.json())
+                .then(anuncio => {
+                    if (editDescricao) editDescricao.value = anuncio.descricao || "";
+                    if (editValor) editValor.value = anuncio.valor || "";
+                    if (editDataInicio) editDataInicio.value = anuncio.data_inico ? anuncio.data_inico.split("T")[0] : "";
+                    if (editDataFim) editDataFim.value = anuncio.data_fim ? anuncio.data_fim.split("T")[0] : "";
+                    if (editClienteSel) editClienteSel.value = anuncio.cliente_id || "";
+                    if (editPlataformaSel) editPlataformaSel.value = anuncio.plataforma_id || "";
+                    if (modalEditar) modalEditar.classList.add("is-open");
+                })
+                .catch(() => {
+                    alert("Erro ao carregar dados do anúncio.");
+                });
+        });
+    }
+
+    if (btnImprimir) {
+        btnImprimir.addEventListener("click", () => {
+            window.print();
+        });
+    }
+
+    if (btnExcluir) {
+        btnExcluir.addEventListener("click", async () => {
+            const selecionados = document.querySelectorAll('#anunciosBody input[type="checkbox"]:checked');
+            if (selecionados.length === 0) {
+                alert("Por favor, selecione um anúncio na lista.");
+                return;
+            }
+            const ids = Array.from(selecionados).map(cb => cb.dataset.id).join(", ");
+            const confirmado = confirm(`Excluir os anúncios com ID: ${ids}?`);
+            if (!confirmado) return;
+            const erros = [];
+            for (const cb of selecionados) {
+                try {
+                    const res = await fetch(`${API_URL}/api/anuncios/${cb.dataset.id}`, { method: "DELETE" });
+                    const dados = await res.json();
+                    if (!dados.success) erros.push(cb.dataset.id);
+                } catch (_) {
+                    erros.push(cb.dataset.id);
+                }
+            }
+            if (erros.length > 0) {
+                alert(`Falha ao excluir IDs: ${erros.join(", ")}`);
+            } else {
+                alert("Anúncio(s) excluído(s) com sucesso.");
+            }
+            await carregarAnuncios();
+        });
+    }
+};
+
 const initLogout = () => {
     const btn = $("#btnLogout");
     if (btn) {
@@ -572,5 +944,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (page === "cadastro") initCadastro();
     if (page === "cadastros") initCadastros();
     if (page === "clientes") initClientes();
+    if (page === "anuncios") initAnuncios();
     initLogout();
 });

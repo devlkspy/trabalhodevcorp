@@ -34,6 +34,18 @@ db.connect((err) => {
   db.query('CREATE TABLE IF NOT EXISTS tbPessoas (pessoa_id INT AUTO_INCREMENT PRIMARY KEY, nome VARCHAR(200) NOT NULL, cpf VARCHAR(14) NOT NULL, nascimento DATE, telefone VARCHAR(20), pessoa_tipo_id INT, atualizado_por INT, atualizado_em DATE)', (err) => {
     if (err) console.error('Erro ao criar tbPessoas:', err.sqlMessage);
   });
+  db.query('CREATE TABLE IF NOT EXISTS tbPessoaTipo (pessoa_tipo_id INT AUTO_INCREMENT PRIMARY KEY, descricao VARCHAR(200) NOT NULL)', (err) => {
+    if (err) console.error('Erro ao criar tbPessoaTipo:', err.sqlMessage);
+    else {
+      db.query('SELECT COUNT(*) AS total FROM tbPessoaTipo', (err2, rows) => {
+        if (!err2 && rows[0].total === 0) {
+          db.query("INSERT INTO tbPessoaTipo (descricao) VALUES ('Física'), ('Jurídica')", (err3) => {
+            if (err3) console.error('Erro ao popular tbPessoaTipo:', err3.sqlMessage);
+          });
+        }
+      });
+    }
+  });
   db.query('CREATE TABLE IF NOT EXISTS tbPlataforma (plataforma_id INT AUTO_INCREMENT PRIMARY KEY, nome VARCHAR(100) NOT NULL)', (err) => {
     if (err) console.error('Erro ao criar tbPlataforma:', err.sqlMessage);
     else {
@@ -139,7 +151,14 @@ app.delete('/api/clientes/:id', (req, res) => {
 });
 
 app.get('/api/pessoas', (req, res) => {
-  db.query('SELECT pessoa_id, nome, cpf, nascimento, telefone FROM tbPessoas', (err, results) => {
+  db.query('SELECT pessoa_id, nome, cpf, nascimento, telefone, pessoa_tipo_id FROM tbPessoas', (err, results) => {
+    if (err) return dbErr(err, res);
+    res.json(results);
+  });
+});
+
+app.get('/api/pessoatipos', (req, res) => {
+  db.query('SELECT pessoa_tipo_id, descricao FROM tbPessoaTipo ORDER BY pessoa_tipo_id', (err, results) => {
     if (err) return dbErr(err, res);
     res.json(results);
   });
@@ -200,8 +219,9 @@ app.delete('/api/anuncios/:id', (req, res) => {
 });
 
 app.post('/api/pessoas', (req, res) => {
-  const { nome, cpf, nascimento, telefone } = req.body;
-  db.query('INSERT INTO tbPessoas (nome, cpf, nascimento, telefone) VALUES (?, ?, ?, ?)', [nome, cpf, nascimento || null, telefone || null], (err, result) => {
+  const { nome, cpf, nascimento, telefone, pessoa_tipo_id, atualizado_por } = req.body;
+  const atualizado_em = new Date();
+  db.query('INSERT INTO tbPessoas (nome, cpf, nascimento, telefone, pessoa_tipo_id, atualizado_por, atualizado_em) VALUES (?, ?, ?, ?, ?, ?, ?)', [nome, cpf, nascimento || null, telefone || null, pessoa_tipo_id || null, atualizado_por || null, atualizado_em], (err, result) => {
     if (err) return dbErr(err, res);
     res.json({ success: true, message: 'Pessoa cadastrada com sucesso!', id: result.insertId });
   });

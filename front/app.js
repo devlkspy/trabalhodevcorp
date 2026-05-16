@@ -413,9 +413,23 @@ const initClientes = async () => {
     const inclCpfPessoa = $("#inclCpfPessoa");
     const inclNascimentoPessoa = $("#inclNascimentoPessoa");
     const inclTelefonePessoa = $("#inclTelefonePessoa");
+    const inclTipoPessoa = $("#inclTipoPessoa");
     const inclPessoaMsg = $("#inclPessoaMsg");
     const btnInclPessoaCancelar = $("#btnInclPessoaCancelar");
     const btnInclPessoaSalvar = $("#btnInclPessoaSalvar");
+
+    if (inclTipoPessoa) {
+        try {
+            const resTipos = await fetch(`${API_URL}/api/pessoatipos`);
+            const tipos = await resTipos.json();
+            tipos.forEach((t) => {
+                const opt = document.createElement("option");
+                opt.value = t.pessoa_tipo_id;
+                opt.textContent = t.descricao;
+                inclTipoPessoa.appendChild(opt);
+            });
+        } catch (_) {}
+    }
 
     let maskCpf = null;
     let maskTelefone = null;
@@ -447,6 +461,7 @@ const initClientes = async () => {
         if (inclNascimentoPessoa) inclNascimentoPessoa.value = "";
         if (maskTelefone) maskTelefone.unmaskedValue = "";
         else if (inclTelefonePessoa) inclTelefonePessoa.value = "";
+        if (inclTipoPessoa) inclTipoPessoa.value = "";
         if (inclPessoaMsg) inclPessoaMsg.style.display = "none";
     };
 
@@ -466,6 +481,10 @@ const initClientes = async () => {
             const cpf = inclCpfPessoa ? inclCpfPessoa.value.trim() : "";
             const nascimento = inclNascimentoPessoa ? inclNascimentoPessoa.value : "";
             const telefone = inclTelefonePessoa ? inclTelefonePessoa.value.trim() : "";
+            const pessoaTipoId = inclTipoPessoa ? inclTipoPessoa.value : "";
+            const sessao = localStorage.getItem(sessionKey);
+            let atu_por = null;
+            if (sessao) { try { atu_por = JSON.parse(sessao).user; } catch (_) {} }
             if (!nome) {
                 inclPessoaMsg.className = "msg is-danger";
                 inclPessoaMsg.innerHTML = "O nome não pode ficar em branco.";
@@ -500,7 +519,7 @@ const initClientes = async () => {
                 const res = await fetch(`${API_URL}/api/pessoas`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ nome, cpf, nascimento: nascimento || null, telefone: telefone || null })
+                    body: JSON.stringify({ nome, cpf, nascimento: nascimento || null, telefone: telefone || null, pessoa_tipo_id: pessoaTipoId || null, atualizado_por: atu_por })
                 });
                 let dados;
                 try {

@@ -46,10 +46,10 @@ db.connect((err) => {
     if (err) console.error('Erro ao criar tbPessoas:', err.sqlMessage);
   });
 
-  db.query('CREATE TABLE IF NOT EXISTS tbPlataforma (plataforma_id INT AUTO_INCREMENT PRIMARY KEY, nome VARCHAR(100) NOT NULL)', (err) => {
+  db.query('CREATE TABLE IF NOT EXISTS tbPlataforma (plataforma_id INT AUTO_INCREMENT PRIMARY KEY, descricao VARCHAR(100) NOT NULL)', (err) => {
     if (err) console.error('Erro ao criar tbPlataforma:', err.sqlMessage);
     else {
-      db.query("INSERT IGNORE INTO tbPlataforma (plataforma_id, nome) VALUES (1,'Google Ads'),(2,'Meta Ads'),(3,'TikTok Ads'),(4,'LinkedIn Ads'),(5,'Twitter Ads'),(6,'YouTube Ads')", (err2) => {
+      db.query("INSERT IGNORE INTO tbPlataforma (plataforma_id, descricao) VALUES (1,'Google Ads'),(2,'Meta Ads'),(3,'TikTok Ads'),(4,'LinkedIn Ads'),(5,'Twitter Ads'),(6,'YouTube Ads')", (err2) => {
         if (err2) console.error('Erro ao popular tbPlataforma:', err2.sqlMessage);
       });
     }
@@ -177,14 +177,14 @@ app.get('/api/pessoatipos', (req, res) => {
 });
 
 app.get('/api/plataformas', (req, res) => {
-  db.query('SELECT plataforma_id, nome FROM tbPlataforma ORDER BY nome', (err, results) => {
+  db.query('SELECT plataforma_id, descricao FROM tbPlataforma ORDER BY descricao', (err, results) => {
     if (err) return dbErr(err, res);
     res.json(results);
   });
 });
 
 app.get('/api/anuncios', (req, res) => {
-  const sql = `SELECT a.anuncio_id, a.titulo, a.descricao, a.valor, a.data_inico, a.data_fim, a.cliente_id, a.plataforma_id, a.atualizado_por, a.atualizado_em, p.nome AS cliente_nome, pl.nome AS plataforma_nome FROM tbAnuncio a LEFT JOIN tbPessoas p ON a.cliente_id = p.pessoa_id LEFT JOIN tbPlataforma pl ON a.plataforma_id = pl.plataforma_id ORDER BY a.anuncio_id DESC`;
+  const sql = `SELECT a.anuncio_id, a.titulo, a.descricao, a.valor, a.data_inico, a.data_fim, a.cliente_id, a.plataforma_id, a.atualizado_por, a.atualizado_em, p.nome AS cliente_nome, pl.descricao AS plataforma_nome FROM tbAnuncio a LEFT JOIN tbPessoas p ON a.cliente_id = p.pessoa_id LEFT JOIN tbPlataforma pl ON a.plataforma_id = pl.plataforma_id ORDER BY a.anuncio_id DESC`;
   db.query(sql, (err, results) => {
     if (err) return dbErr(err, res);
     res.json(results);
@@ -193,7 +193,7 @@ app.get('/api/anuncios', (req, res) => {
 
 app.get('/api/anuncios/:id', (req, res) => {
   const { id } = req.params;
-  const sql = `SELECT a.anuncio_id, a.titulo, a.descricao, a.valor, a.data_inico, a.data_fim, a.cliente_id, a.plataforma_id, a.atualizado_por, a.atualizado_em, p.nome AS cliente_nome, pl.nome AS plataforma_nome FROM tbAnuncio a LEFT JOIN tbPessoas p ON a.cliente_id = p.pessoa_id LEFT JOIN tbPlataforma pl ON a.plataforma_id = pl.plataforma_id WHERE a.anuncio_id = ?`;
+  const sql = `SELECT a.anuncio_id, a.titulo, a.descricao, a.valor, a.data_inico, a.data_fim, a.cliente_id, a.plataforma_id, a.atualizado_por, a.atualizado_em, p.nome AS cliente_nome, pl.descricao AS plataforma_nome FROM tbAnuncio a LEFT JOIN tbPessoas p ON a.cliente_id = p.pessoa_id LEFT JOIN tbPlataforma pl ON a.plataforma_id = pl.plataforma_id WHERE a.anuncio_id = ?`;
   db.query(sql, [id], (err, results) => {
     if (err) return dbErr(err, res);
     if (results.length === 0) return res.json({ success: false, message: 'Anúncio não encontrado.' });

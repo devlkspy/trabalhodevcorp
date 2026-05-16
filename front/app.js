@@ -676,9 +676,9 @@ const initAnuncios = async () => {
     const editPlataformaSel = $("#editPlataformaAnuncio");
 
     if (inclClienteSel) await popularSelect(inclClienteSel, `${API_URL}/api/pessoas`, "pessoa_id", "nome");
-    if (inclPlataformaSel) await popularSelect(inclPlataformaSel, `${API_URL}/api/plataformas`, "plataforma_id", "nome");
+    if (inclPlataformaSel) await popularSelect(inclPlataformaSel, `${API_URL}/api/plataformas`, "plataforma_id", "descricao");
     if (editClienteSel) await popularSelect(editClienteSel, `${API_URL}/api/pessoas`, "pessoa_id", "nome");
-    if (editPlataformaSel) await popularSelect(editPlataformaSel, `${API_URL}/api/plataformas`, "plataforma_id", "nome");
+    if (editPlataformaSel) await popularSelect(editPlataformaSel, `${API_URL}/api/plataformas`, "plataforma_id", "descricao");
 
     const btnIncluir = $("#btnIncluirAnuncio");
     const btnEditar = $("#btnEditarAnuncio");

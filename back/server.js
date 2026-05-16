@@ -25,6 +25,18 @@ const db = mysql.createConnection({
 
 const dbErr = (err, res) => res.status(500).json({ success: false, message: err.sqlMessage || err.message || 'Erro interno no banco de dados.' });
 
+const resolverUid = (valor, cb) => {
+  const num = parseInt(valor);
+  if (!isNaN(num) && num > 0) return cb(num);
+  if (valor && typeof valor === 'string' && valor.includes('@')) {
+    return db.query('SELECT usuario_id FROM tbUsuarios WHERE login = ? LIMIT 1', [valor], (err, rows) => {
+      if (!err && rows.length > 0) return cb(rows[0].usuario_id);
+      return cb(1);
+    });
+  }
+  return cb(1);
+};
+
 db.connect((err) => {
   if (err) throw err;
   console.log('Conectado ao banco PubliADS (Aiven) com sucesso!');
@@ -134,17 +146,6 @@ app.get('/api/pessoas', (req, res) => {
 app.post('/api/pessoas', (req, res) => {
   const { nome, cpf, nascimento, telefone, pessoa_tipo_id, atualizado_por } = req.body;
   const atualizado_em = new Date();
-  const resolverUid = (valor, cb) => {
-    const num = parseInt(valor);
-    if (!isNaN(num) && num > 0) return cb(num);
-    if (valor && typeof valor === 'string' && valor.includes('@')) {
-      return db.query('SELECT usuario_id FROM tbUsuarios WHERE login = ? LIMIT 1', [valor], (err, rows) => {
-        if (!err && rows.length > 0) return cb(rows[0].usuario_id);
-        return cb(1);
-      });
-    }
-    return cb(1);
-  };
   resolverUid(atualizado_por, (uid) => {
     db.query('INSERT INTO tbPessoas (nome, cpf, nascimento, telefone, pessoa_tipo_id, atualizado_por, atualizado_em) VALUES (?, ?, ?, ?, ?, ?, ?)', [nome, cpf, nascimento || null, telefone || null, pessoa_tipo_id || null, uid, atualizado_em], (err, result) => {
       if (err) return dbErr(err, res);
@@ -204,10 +205,11 @@ app.get('/api/anuncios/:id', (req, res) => {
 app.post('/api/anuncios', (req, res) => {
   const { titulo, descricao, valor, data_inico, data_fim, cliente_id, plataforma_id, atualizado_por } = req.body;
   const atualizado_em = new Date();
-  const uid = parseInt(atualizado_por) || null;
-  db.query('INSERT INTO tbAnuncio (titulo, descricao, valor, data_inico, data_fim, cliente_id, plataforma_id, atualizado_por, atualizado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [titulo, descricao, valor, data_inico, data_fim, cliente_id || null, plataforma_id || null, uid, atualizado_em], (err, result) => {
-    if (err) return dbErr(err, res);
-    res.json({ success: true, message: 'Anúncio cadastrado com sucesso!', id: result.insertId });
+  resolverUid(atualizado_por, (uid) => {
+    db.query('INSERT INTO tbAnuncio (titulo, descricao, valor, data_inico, data_fim, cliente_id, plataforma_id, atualizado_por, atualizado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [titulo, descricao, valor, data_inico, data_fim, cliente_id || null, plataforma_id || null, uid, atualizado_em], (err, result) => {
+      if (err) return dbErr(err, res);
+      res.json({ success: true, message: 'Anúncio cadastrado com sucesso!', id: result.insertId });
+    });
   });
 });
 
@@ -215,11 +217,12 @@ app.put('/api/anuncios/:id', (req, res) => {
   const { id } = req.params;
   const { titulo, descricao, valor, data_inico, data_fim, cliente_id, plataforma_id, atualizado_por } = req.body;
   const atualizado_em = new Date();
-  const uid = parseInt(atualizado_por) || null;
-  db.query('UPDATE tbAnuncio SET titulo = ?, descricao = ?, valor = ?, data_inico = ?, data_fim = ?, cliente_id = ?, plataforma_id = ?, atualizado_por = ?, atualizado_em = ? WHERE anuncio_id = ?', [titulo, descricao, valor, data_inico, data_fim, cliente_id || null, plataforma_id || null, uid, atualizado_em, id], (err, result) => {
-    if (err) return dbErr(err, res);
-    if (result.affectedRows === 0) return res.json({ success: false, message: 'Anúncio não encontrado.' });
-    res.json({ success: true, message: 'Anúncio atualizado com sucesso.' });
+  resolverUid(atualizado_por, (uid) => {
+    db.query('UPDATE tbAnuncio SET titulo = ?, descricao = ?, valor = ?, data_inico = ?, data_fim = ?, cliente_id = ?, plataforma_id = ?, atualizado_por = ?, atualizado_em = ? WHERE anuncio_id = ?', [titulo, descricao, valor, data_inico, data_fim, cliente_id || null, plataforma_id || null, uid, atualizado_em, id], (err, result) => {
+      if (err) return dbErr(err, res);
+      if (result.affectedRows === 0) return res.json({ success: false, message: 'Anúncio não encontrado.' });
+      res.json({ success: true, message: 'Anúncio atualizado com sucesso.' });
+    });
   });
 });
 

@@ -37,12 +37,8 @@ db.connect((err) => {
   db.query('CREATE TABLE IF NOT EXISTS tbPessoaTipo (pessoa_tipo_id INT AUTO_INCREMENT PRIMARY KEY, descricao VARCHAR(200) NOT NULL)', (err) => {
     if (err) console.error('Erro ao criar tbPessoaTipo:', err.sqlMessage);
     else {
-      db.query('SELECT COUNT(*) AS total FROM tbPessoaTipo', (err2, rows) => {
-        if (!err2 && rows[0].total === 0) {
-          db.query("INSERT INTO tbPessoaTipo (descricao) VALUES ('Física'), ('Jurídica')", (err3) => {
-            if (err3) console.error('Erro ao popular tbPessoaTipo:', err3.sqlMessage);
-          });
-        }
+      db.query("INSERT IGNORE INTO tbPessoaTipo (pessoa_tipo_id, descricao) VALUES (1, 'Física'), (2, 'Jurídica')", (err2) => {
+        if (err2) console.error('Erro ao popular tbPessoaTipo:', err2.sqlMessage);
       });
     }
   });
@@ -158,6 +154,13 @@ app.get('/api/pessoas', (req, res) => {
 });
 
 app.get('/api/pessoatipos', (req, res) => {
+  db.query('SELECT pessoa_tipo_id, descricao FROM tbPessoaTipo ORDER BY pessoa_tipo_id', (err, results) => {
+    if (err) return dbErr(err, res);
+    res.json(results);
+  });
+});
+
+app.get('/api/tipos-pessoa', (req, res) => {
   db.query('SELECT pessoa_tipo_id, descricao FROM tbPessoaTipo ORDER BY pessoa_tipo_id', (err, results) => {
     if (err) return dbErr(err, res);
     res.json(results);

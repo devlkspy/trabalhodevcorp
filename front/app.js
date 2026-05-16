@@ -420,15 +420,19 @@ const initClientes = async () => {
 
     if (inclTipoPessoa) {
         try {
-            const resTipos = await fetch(`${API_URL}/api/pessoatipos`);
+            const resTipos = await fetch(`${API_URL}/api/tipos-pessoa`);
             const tipos = await resTipos.json();
-            tipos.forEach((t) => {
-                const opt = document.createElement("option");
-                opt.value = t.pessoa_tipo_id;
-                opt.textContent = t.descricao;
-                inclTipoPessoa.appendChild(opt);
-            });
-        } catch (_) {}
+            if (Array.isArray(tipos)) {
+                tipos.forEach((t) => {
+                    const opt = document.createElement("option");
+                    opt.value = t.pessoa_tipo_id;
+                    opt.textContent = t.descricao;
+                    inclTipoPessoa.appendChild(opt);
+                });
+            }
+        } catch (err) {
+            console.error("Erro ao carregar tipos de pessoa:", err);
+        }
     }
 
     let maskCpf = null;

@@ -28,12 +28,11 @@ const dbErr = (err, res) => res.status(500).json({ success: false, message: err.
 db.connect((err) => {
   if (err) throw err;
   console.log('Conectado ao banco PubliADS (Aiven) com sucesso!');
-  db.query('CREATE TABLE IF NOT EXISTS tbClientes (id INT AUTO_INCREMENT PRIMARY KEY, razao_social VARCHAR(150) NOT NULL, cpf_cnpj VARCHAR(20) NOT NULL, contato VARCHAR(50) NOT NULL)', (err) => {
-    if (err) console.error('Erro ao criar tbClientes:', err.sqlMessage);
+
+  db.query('CREATE TABLE IF NOT EXISTS tbUsuarios (usuario_id INT AUTO_INCREMENT PRIMARY KEY, nome VARCHAR(200) NOT NULL, login VARCHAR(50) NOT NULL UNIQUE, senha VARCHAR(255) NOT NULL, atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, atualizado_por INT)', (err) => {
+    if (err) console.error('Erro ao criar tbUsuarios:', err.sqlMessage);
   });
-  db.query('CREATE TABLE IF NOT EXISTS tbPessoas (pessoa_id INT AUTO_INCREMENT PRIMARY KEY, nome VARCHAR(200) NOT NULL, cpf VARCHAR(14) NOT NULL, nascimento DATE, telefone VARCHAR(20), pessoa_tipo_id INT, atualizado_por INT, atualizado_em DATE)', (err) => {
-    if (err) console.error('Erro ao criar tbPessoas:', err.sqlMessage);
-  });
+
   db.query('CREATE TABLE IF NOT EXISTS tbPessoaTipo (pessoa_tipo_id INT AUTO_INCREMENT PRIMARY KEY, descricao VARCHAR(200) NOT NULL)', (err) => {
     if (err) console.error('Erro ao criar tbPessoaTipo:', err.sqlMessage);
     else {
@@ -42,30 +41,35 @@ db.connect((err) => {
       });
     }
   });
+
+  db.query('CREATE TABLE IF NOT EXISTS tbPessoas (pessoa_id INT AUTO_INCREMENT PRIMARY KEY, nome VARCHAR(200) NOT NULL, cpf VARCHAR(14) NOT NULL, nascimento DATE, telefone VARCHAR(20), pessoa_tipo_id INT, atualizado_por INT, atualizado_em DATE)', (err) => {
+    if (err) console.error('Erro ao criar tbPessoas:', err.sqlMessage);
+  });
+
   db.query('CREATE TABLE IF NOT EXISTS tbPlataforma (plataforma_id INT AUTO_INCREMENT PRIMARY KEY, nome VARCHAR(100) NOT NULL)', (err) => {
     if (err) console.error('Erro ao criar tbPlataforma:', err.sqlMessage);
     else {
-      db.query('SELECT COUNT(*) AS total FROM tbPlataforma', (err2, rows) => {
-        if (!err2 && rows[0].total === 0) {
-          db.query("INSERT INTO tbPlataforma (nome) VALUES ('Google Ads'), ('Meta Ads'), ('TikTok Ads'), ('LinkedIn Ads'), ('Twitter Ads'), ('YouTube Ads')", (err3) => {
-            if (err3) console.error('Erro ao popular tbPlataforma:', err3.sqlMessage);
-          });
-        }
+      db.query("INSERT IGNORE INTO tbPlataforma (plataforma_id, nome) VALUES (1,'Google Ads'),(2,'Meta Ads'),(3,'TikTok Ads'),(4,'LinkedIn Ads'),(5,'Twitter Ads'),(6,'YouTube Ads')", (err2) => {
+        if (err2) console.error('Erro ao popular tbPlataforma:', err2.sqlMessage);
       });
     }
   });
-  db.query('CREATE TABLE IF NOT EXISTS tbAnuncio (anuncio_id INT AUTO_INCREMENT PRIMARY KEY, titulo VARCHAR(100) NOT NULL, descricao VARCHAR(200) NOT NULL, valor DECIMAL(10,2) NOT NULL, data_inico DATE NOT NULL, data_fim DATE NOT NULL, cliente_id INT, plataforma_id INT, atualizado_por VARCHAR(200), atualizado_em DATETIME)', (err) => {
+
+  db.query('CREATE TABLE IF NOT EXISTS tbAnuncio (anuncio_id INT AUTO_INCREMENT PRIMARY KEY, titulo VARCHAR(100) NOT NULL, descricao VARCHAR(200) NOT NULL, valor DECIMAL(10,2) NOT NULL, data_inico DATE NOT NULL, data_fim DATE NOT NULL, cliente_id INT, plataforma_id INT, atualizado_por INT, atualizado_em DATETIME)', (err) => {
     if (err) console.error('Erro ao criar tbAnuncio:', err.sqlMessage);
+  });
+
+  db.query('CREATE TABLE IF NOT EXISTS tbClientes (id INT AUTO_INCREMENT PRIMARY KEY, razao_social VARCHAR(150) NOT NULL, cpf_cnpj VARCHAR(20) NOT NULL, contato VARCHAR(50) NOT NULL)', (err) => {
+    if (err) console.error('Erro ao criar tbClientes:', err.sqlMessage);
   });
 });
 
 app.post('/api/login', (req, res) => {
   const { login, senha } = req.body;
-  const query = 'SELECT * FROM tbUsuarios WHERE login = ? AND senha = ?';
-  db.query(query, [login, senha], (err, results) => {
+  db.query('SELECT usuario_id, nome, login FROM tbUsuarios WHERE login = ? AND senha = ?', [login, senha], (err, results) => {
     if (err) return dbErr(err, res);
     if (results.length > 0) {
-      res.json({ success: true, message: 'Acesso liberado' });
+      res.json({ success: true, message: 'Acesso liberado', usuario_id: results[0].usuario_id, nome: results[0].nome, login: results[0].login });
     } else {
       res.json({ success: false, message: 'Login ou senha incorretos' });
     }
@@ -74,14 +78,11 @@ app.post('/api/login', (req, res) => {
 
 app.post('/api/register', (req, res) => {
   const { nome, login, senha } = req.body;
-  const checkQuery = 'SELECT * FROM tbUsuarios WHERE login = ?';
-  db.query(checkQuery, [login], (err, results) => {
+  db.query('SELECT usuario_id FROM tbUsuarios WHERE login = ?', [login], (err, results) => {
     if (err) return dbErr(err, res);
-    if (results.length > 0) {
-      return res.json({ success: false, message: 'Este usuário já está em uso.' });
-    }
-    const insertQuery = 'INSERT INTO tbUsuarios (nome, login, senha) VALUES (?, ?, ?)';
-    db.query(insertQuery, [nome, login, senha], (err) => {
+    if (results.length > 0) return res.json({ success: false, message: 'Este usuário já está em uso.' });
+    const atualizado_em = new Date();
+    db.query('INSERT INTO tbUsuarios (nome, login, senha, atualizado_em) VALUES (?, ?, ?, ?)', [nome, login, senha, atualizado_em], (err) => {
       if (err) return dbErr(err, res);
       res.json({ success: true, message: 'Usuário cadastrado com sucesso!' });
     });
@@ -89,7 +90,7 @@ app.post('/api/register', (req, res) => {
 });
 
 app.get('/api/usuarios', (req, res) => {
-  db.query('SELECT nome, login FROM tbUsuarios', (err, results) => {
+  db.query('SELECT usuario_id, nome, login FROM tbUsuarios', (err, results) => {
     if (err) return dbErr(err, res);
     res.json(results);
   });
@@ -107,43 +108,20 @@ app.delete('/api/usuarios/:login', (req, res) => {
 app.put('/api/usuarios/:login', (req, res) => {
   const { login } = req.params;
   const { nome, senha } = req.body;
+  const atualizado_em = new Date();
   if (senha && senha.trim() !== '') {
-    db.query('UPDATE tbUsuarios SET nome = ?, senha = ? WHERE login = ?', [nome, senha, login], (err, result) => {
+    db.query('UPDATE tbUsuarios SET nome = ?, senha = ?, atualizado_em = ? WHERE login = ?', [nome, senha, atualizado_em, login], (err, result) => {
       if (err) return dbErr(err, res);
       if (result.affectedRows === 0) return res.json({ success: false, message: 'Usuário não encontrado.' });
       res.json({ success: true, message: 'Usuário atualizado com sucesso.' });
     });
   } else {
-    db.query('UPDATE tbUsuarios SET nome = ? WHERE login = ?', [nome, login], (err, result) => {
+    db.query('UPDATE tbUsuarios SET nome = ?, atualizado_em = ? WHERE login = ?', [nome, atualizado_em, login], (err, result) => {
       if (err) return dbErr(err, res);
       if (result.affectedRows === 0) return res.json({ success: false, message: 'Usuário não encontrado.' });
       res.json({ success: true, message: 'Usuário atualizado com sucesso.' });
     });
   }
-});
-
-app.get('/api/clientes', (req, res) => {
-  db.query('SELECT * FROM tbClientes', (err, results) => {
-    if (err) return dbErr(err, res);
-    res.json(results);
-  });
-});
-
-app.post('/api/clientes', (req, res) => {
-  const { razao_social, cpf_cnpj, contato } = req.body;
-  db.query('INSERT INTO tbClientes (razao_social, cpf_cnpj, contato) VALUES (?, ?, ?)', [razao_social, cpf_cnpj, contato], (err, result) => {
-    if (err) return dbErr(err, res);
-    res.json({ success: true, message: 'Cliente cadastrado com sucesso!', id: result.insertId });
-  });
-});
-
-app.delete('/api/clientes/:id', (req, res) => {
-  const { id } = req.params;
-  db.query('DELETE FROM tbClientes WHERE id = ?', [id], (err, result) => {
-    if (err) return dbErr(err, res);
-    if (result.affectedRows === 0) return res.json({ success: false, message: 'Cliente não encontrado.' });
-    res.json({ success: true, message: 'Cliente excluído com sucesso.' });
-  });
 });
 
 app.get('/api/pessoas', (req, res) => {
@@ -153,14 +131,33 @@ app.get('/api/pessoas', (req, res) => {
   });
 });
 
-app.get('/api/pessoatipos', (req, res) => {
+app.post('/api/pessoas', (req, res) => {
+  const { nome, cpf, nascimento, telefone, pessoa_tipo_id, atualizado_por } = req.body;
+  const atualizado_em = new Date();
+  const uid = parseInt(atualizado_por) || null;
+  db.query('INSERT INTO tbPessoas (nome, cpf, nascimento, telefone, pessoa_tipo_id, atualizado_por, atualizado_em) VALUES (?, ?, ?, ?, ?, ?, ?)', [nome, cpf, nascimento || null, telefone || null, pessoa_tipo_id || null, uid, atualizado_em], (err, result) => {
+    if (err) return dbErr(err, res);
+    res.json({ success: true, message: 'Pessoa cadastrada com sucesso!', id: result.insertId });
+  });
+});
+
+app.delete('/api/pessoas/:id', (req, res) => {
+  const { id } = req.params;
+  db.query('DELETE FROM tbPessoas WHERE pessoa_id = ?', [id], (err, result) => {
+    if (err) return dbErr(err, res);
+    if (result.affectedRows === 0) return res.json({ success: false, message: 'Pessoa não encontrada.' });
+    res.json({ success: true, message: 'Pessoa excluída com sucesso.' });
+  });
+});
+
+app.get('/api/tipos-pessoa', (req, res) => {
   db.query('SELECT pessoa_tipo_id, descricao FROM tbPessoaTipo ORDER BY pessoa_tipo_id', (err, results) => {
     if (err) return dbErr(err, res);
     res.json(results);
   });
 });
 
-app.get('/api/tipos-pessoa', (req, res) => {
+app.get('/api/pessoatipos', (req, res) => {
   db.query('SELECT pessoa_tipo_id, descricao FROM tbPessoaTipo ORDER BY pessoa_tipo_id', (err, results) => {
     if (err) return dbErr(err, res);
     res.json(results);
@@ -195,7 +192,8 @@ app.get('/api/anuncios/:id', (req, res) => {
 app.post('/api/anuncios', (req, res) => {
   const { titulo, descricao, valor, data_inico, data_fim, cliente_id, plataforma_id, atualizado_por } = req.body;
   const atualizado_em = new Date();
-  db.query('INSERT INTO tbAnuncio (titulo, descricao, valor, data_inico, data_fim, cliente_id, plataforma_id, atualizado_por, atualizado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [titulo, descricao, valor, data_inico, data_fim, cliente_id || null, plataforma_id || null, atualizado_por || null, atualizado_em], (err, result) => {
+  const uid = parseInt(atualizado_por) || null;
+  db.query('INSERT INTO tbAnuncio (titulo, descricao, valor, data_inico, data_fim, cliente_id, plataforma_id, atualizado_por, atualizado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [titulo, descricao, valor, data_inico, data_fim, cliente_id || null, plataforma_id || null, uid, atualizado_em], (err, result) => {
     if (err) return dbErr(err, res);
     res.json({ success: true, message: 'Anúncio cadastrado com sucesso!', id: result.insertId });
   });
@@ -205,7 +203,8 @@ app.put('/api/anuncios/:id', (req, res) => {
   const { id } = req.params;
   const { titulo, descricao, valor, data_inico, data_fim, cliente_id, plataforma_id, atualizado_por } = req.body;
   const atualizado_em = new Date();
-  db.query('UPDATE tbAnuncio SET titulo = ?, descricao = ?, valor = ?, data_inico = ?, data_fim = ?, cliente_id = ?, plataforma_id = ?, atualizado_por = ?, atualizado_em = ? WHERE anuncio_id = ?', [titulo, descricao, valor, data_inico, data_fim, cliente_id || null, plataforma_id || null, atualizado_por || null, atualizado_em, id], (err, result) => {
+  const uid = parseInt(atualizado_por) || null;
+  db.query('UPDATE tbAnuncio SET titulo = ?, descricao = ?, valor = ?, data_inico = ?, data_fim = ?, cliente_id = ?, plataforma_id = ?, atualizado_por = ?, atualizado_em = ? WHERE anuncio_id = ?', [titulo, descricao, valor, data_inico, data_fim, cliente_id || null, plataforma_id || null, uid, atualizado_em, id], (err, result) => {
     if (err) return dbErr(err, res);
     if (result.affectedRows === 0) return res.json({ success: false, message: 'Anúncio não encontrado.' });
     res.json({ success: true, message: 'Anúncio atualizado com sucesso.' });
@@ -221,21 +220,27 @@ app.delete('/api/anuncios/:id', (req, res) => {
   });
 });
 
-app.post('/api/pessoas', (req, res) => {
-  const { nome, cpf, nascimento, telefone, pessoa_tipo_id, atualizado_por } = req.body;
-  const atualizado_em = new Date();
-  db.query('INSERT INTO tbPessoas (nome, cpf, nascimento, telefone, pessoa_tipo_id, atualizado_por, atualizado_em) VALUES (?, ?, ?, ?, ?, ?, ?)', [nome, cpf, nascimento || null, telefone || null, pessoa_tipo_id || null, atualizado_por || null, atualizado_em], (err, result) => {
+app.get('/api/clientes', (req, res) => {
+  db.query('SELECT * FROM tbClientes', (err, results) => {
     if (err) return dbErr(err, res);
-    res.json({ success: true, message: 'Pessoa cadastrada com sucesso!', id: result.insertId });
+    res.json(results);
   });
 });
 
-app.delete('/api/pessoas/:id', (req, res) => {
-  const { id } = req.params;
-  db.query('DELETE FROM tbPessoas WHERE pessoa_id = ?', [id], (err, result) => {
+app.post('/api/clientes', (req, res) => {
+  const { razao_social, cpf_cnpj, contato } = req.body;
+  db.query('INSERT INTO tbClientes (razao_social, cpf_cnpj, contato) VALUES (?, ?, ?)', [razao_social, cpf_cnpj, contato], (err, result) => {
     if (err) return dbErr(err, res);
-    if (result.affectedRows === 0) return res.json({ success: false, message: 'Pessoa não encontrada.' });
-    res.json({ success: true, message: 'Pessoa excluída com sucesso.' });
+    res.json({ success: true, message: 'Cliente cadastrado com sucesso!', id: result.insertId });
+  });
+});
+
+app.delete('/api/clientes/:id', (req, res) => {
+  const { id } = req.params;
+  db.query('DELETE FROM tbClientes WHERE id = ?', [id], (err, result) => {
+    if (err) return dbErr(err, res);
+    if (result.affectedRows === 0) return res.json({ success: false, message: 'Cliente não encontrado.' });
+    res.json({ success: true, message: 'Cliente excluído com sucesso.' });
   });
 });
 

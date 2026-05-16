@@ -7,12 +7,18 @@ const isLoggedIn = () => {
     return !!localStorage.getItem(sessionKey);
 };
 
-const setSession = (user) => {
-    localStorage.setItem(sessionKey, JSON.stringify({ user, at: Date.now() }));
+const setSession = (user, usuario_id) => {
+    localStorage.setItem(sessionKey, JSON.stringify({ user, usuario_id, at: Date.now() }));
 };
 
 const clearSession = () => {
     localStorage.removeItem(sessionKey);
+};
+
+const getSession = () => {
+    const raw = localStorage.getItem(sessionKey);
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch (_) { return null; }
 };
 
 const guard = (page) => {
@@ -47,7 +53,7 @@ const initLogin = () => {
             const dados = await resposta.json();
 
             if (dados.success) {
-                setSession(user);
+                setSession(user, dados.usuario_id);
                 window.location.href = "dashboard.html";
             } else {
                 msg.className = "msg is-danger";
@@ -486,9 +492,8 @@ const initClientes = async () => {
             const nascimento = inclNascimentoPessoa ? inclNascimentoPessoa.value : "";
             const telefone = inclTelefonePessoa ? inclTelefonePessoa.value.trim() : "";
             const pessoaTipoId = inclTipoPessoa ? inclTipoPessoa.value : "";
-            const sessao = localStorage.getItem(sessionKey);
-            let atu_por = null;
-            if (sessao) { try { atu_por = JSON.parse(sessao).user; } catch (_) {} }
+            const sessao = getSession();
+            const atu_por = sessao ? sessao.usuario_id : null;
             if (!nome) {
                 inclPessoaMsg.className = "msg is-danger";
                 inclPessoaMsg.innerHTML = "O nome não pode ficar em branco.";
@@ -701,12 +706,6 @@ const initAnuncios = async () => {
     const btnEditCancelar = $("#btnEditAnuncioCancelar");
     const btnEditSalvar = $("#btnEditAnuncioSalvar");
 
-    const getSession = () => {
-        const raw = localStorage.getItem(sessionKey);
-        if (!raw) return null;
-        try { return JSON.parse(raw); } catch (_) { return null; }
-    };
-
     let maskInclValor = null;
     let maskEditValor = null;
 
@@ -863,7 +862,7 @@ const initAnuncios = async () => {
                         data_fim: dataFim,
                         cliente_id: clienteId || null,
                         plataforma_id: plataformaId || null,
-                        atualizado_por: sessao ? sessao.user : null
+                        atualizado_por: sessao ? sessao.usuario_id : null
                     })
                 });
                 let dados;
@@ -913,7 +912,7 @@ const initAnuncios = async () => {
                         data_fim: dataFim,
                         cliente_id: clienteId || null,
                         plataforma_id: plataformaId || null,
-                        atualizado_por: sessao ? sessao.user : null
+                        atualizado_por: sessao ? sessao.usuario_id : null
                     })
                 });
                 let dados;
